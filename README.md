@@ -24,3 +24,4 @@ And this is what I plan to implement:
 ## Documentation and inspiration
 
 1. https://github.com/SirGnip/arcade_screensaver_framework
+2. https://github.com/gaming32/Windows-Screensaver
