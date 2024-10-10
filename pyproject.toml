@@ -32,10 +32,13 @@ dev = [
 ]
 
 [project.scripts]
-digikam_screensaver_copy_pictures = "digikam_screensaver.digikam_screensaver:copy_pictures"
+digikam_screensaver_copy_pictures = "digikam_screensaver.copy_pictures:copy_pictures"
 
 [tool.setuptools]
 packages = ["digikam_screensaver"]
+
+[tool.ruff]
+line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "UP", "B", "I"]

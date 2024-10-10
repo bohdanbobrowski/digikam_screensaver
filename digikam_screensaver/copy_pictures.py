@@ -2,32 +2,15 @@ import os
 import shutil
 import sqlite3
 
-from progress.bar import Bar
-from pydantic_settings import BaseSettings
+from progress.bar import Bar  # type:ignore
+
+from digikam_screensaver.settings import DigiKamScreensaverSettings
 
 
-class DigiKamScreensaverSettings(BaseSettings):
-    """
-    TODO: Add class config with some reasonable prefix
-    """
+class DigiKamScreensaverCopyPictures:
+    """This is 'redneck' version of a screensaver - but. simple things are the best.
+    The only thing it does is just copying some limited number of starred digiKam pictures to selected folder."""
 
-    pictures_path: str = "C:\\Users\\bohdan\\Pictures"
-    database_file: str = "digikam4.db"
-    target_folder: str = "Screensaver"
-    limit: int = 100
-    width: int = 1920
-    height: int = 1080
-
-    @property
-    def database_path(self) -> str:
-        return os.path.join(self.pictures_path, self.database_file)
-
-    @property
-    def target_path(self) -> str:
-        return os.path.join(self.pictures_path, self.target_folder)
-
-
-class DigiKamScreensaver:
     def __init__(self):
         self.settings = DigiKamScreensaverSettings()
         self.con = sqlite3.connect(self.settings.database_path)
@@ -57,9 +40,7 @@ class DigiKamScreensaver:
                 file_path = file_path
                 file_name = f[2]
                 source_file = os.path.join(self.settings.pictures_path, file_path)
-                target_file = os.path.join(
-                    self.settings.target_path, f"{file_album_name}_{file_name}.jpg"
-                )
+                target_file = os.path.join(self.settings.target_path, f"{file_album_name}_{file_name}.jpg")
                 if os.path.isfile(source_file) and not os.path.isfile(target_file):
                     shutil.copy(source_file, target_file)
             except IndexError:
@@ -67,7 +48,7 @@ class DigiKamScreensaver:
 
 
 def copy_pictures():
-    screensaver = DigiKamScreensaver()
+    screensaver = DigiKamScreensaverCopyPictures()
     screensaver.copy_pictures()
 
 
