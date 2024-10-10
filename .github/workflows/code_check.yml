@@ -19,8 +19,8 @@ jobs:
         python -m pip install '.[dev]'
     - name: Run Ruff linter and code formatter
       run: |
-        poetry run ruff format . --check
-        poetry run ruff check .
+        ruff format . --check
+        ruff check .
     - name: Static code analysis with mypy
       run: |
-        poetry run mypy . 
+        mypy . 
