@@ -2,7 +2,7 @@ import os
 import sqlite3
 from tkinter import *
 
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ExifTags
 
 from digikam_screensaver.settings import DigiKamScreensaverSettings
 
@@ -40,6 +40,19 @@ class DigiKamScreenSaver:
             i = 0
         if i not in self.tk_images:
             image_pil = Image.open(os.path.join(self.settings.pictures_path, self.pictures[i]))
+            orientation_tag = None
+            for orientation in ExifTags.TAGS.keys():
+                if ExifTags.TAGS[orientation] == 'Orientation':
+                    orientation_tag = orientation
+                    break
+            if orientation_tag:
+                exif = image_pil._getexif()
+                if exif[orientation_tag] == 3:
+                    image_pil = image_pil.rotate(180, expand=True)
+                elif exif[orientation_tag] == 6:
+                    image_pil = image_pil.rotate(270, expand=True)
+                elif exif[orientation_tag] == 8:
+                    image_pil = image_pil.rotate(90, expand=True)
             if image_pil.height < image_pil.width:
                 new_height = self.height
                 new_width = int(new_height * image_pil.width / image_pil.height)
