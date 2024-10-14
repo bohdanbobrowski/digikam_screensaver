@@ -1,6 +1,6 @@
 import os
 import sqlite3
-import tkinter as tk
+from tkinter import *
 
 from PIL import Image, ImageTk
 
@@ -19,22 +19,39 @@ class DigiKamScreenSaver:
         self.crsr = self.con.cursor()
 
         self.pictures = self._get_pictures()
+        self.tk_images = []
+        self.tk_margins = []
 
-        self.window = tk.Tk()
+        self.window = Tk()
         self.window.attributes("-fullscreen", True)
         self.window.title("screen_saver!")
         self.window.configure(background="black")
-        label = tk.Label(self.window, text=self.pictures[0])
-        label.pack()
-        width = self.window.winfo_screenwidth()
-        height = self.window.winfo_screenheight()
-        canvas = tk.Canvas(self.window, width=width, height=height)
-        canvas.pack()
-        image_pil = Image.open(os.path.join(self.settings.pictures_path, self.pictures[0]))
-        resized_image_pil = image_pil.resize((width, height))
-        photo_image = ImageTk.PhotoImage(resized_image_pil)
-        canvas.create_image(0, 0, anchor=tk.NW, image=photo_image)
+        # label = Label(self.window, text=self.pictures[0])
+        # label.pack()
+        self.width = self.window.winfo_screenwidth()
+        self.height = self.window.winfo_screenheight()
+        self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
+        self.show_image()
         self.window.mainloop()
+
+    def show_image(self, i=0):
+        self.canvas.delete("all")
+        if i >= len(self.pictures):
+            i = 0
+        if i not in self.tk_images:
+            image_pil = Image.open(os.path.join(self.settings.pictures_path, self.pictures[i]))
+            if image_pil.height < image_pil.width:
+                new_height = self.height
+                new_width = int(new_height * image_pil.width / image_pil.height)
+            else:
+                new_width = self.width
+                new_height = int(new_width * image_pil.height / image_pil.width)
+            self.canvas.pack()
+            resized_image_pil = image_pil.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            self.tk_margins.append(int((self.width - new_width) / 2))
+            self.tk_images.append(ImageTk.PhotoImage(resized_image_pil))
+        self.canvas.create_image(self.tk_margins[i], 0, anchor=NW, image=self.tk_images[i])
+        self.window.after(self.settings.timeout, self.show_image, i + 1)
 
     def _get_query(self) -> str:
         sub_query = "SELECT imageid FROM ImageInformation ii "

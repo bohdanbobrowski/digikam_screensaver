@@ -12,6 +12,7 @@ class DigiKamScreensaverSettings(BaseSettings):
     database_file: str = "digikam4.db"
     target_folder: str = "Screensaver"
     limit: int = 10
+    timeout: int = 5000
     width: int = 1920
     height: int = 1080
 
