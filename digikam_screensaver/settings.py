@@ -8,10 +8,10 @@ class DigiKamScreensaverSettings(BaseSettings):
     TODO: Add class config with some reasonable prefix
     """
 
-    pictures_path: str = "C:\\Users\\bohdan\\Pictures"
+    pictures_path: str = "D:\\Pictures"  # "C:\\Users\\bohdan\\Pictures"
     database_file: str = "digikam4.db"
     target_folder: str = "Screensaver"
-    limit: int = 100
+    limit: int = 10
     width: int = 1920
     height: int = 1080
 
