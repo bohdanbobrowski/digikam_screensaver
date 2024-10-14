@@ -53,7 +53,7 @@ def copy_pictures():
 
 
 def main():
-    pass
+    copy_pictures()
 
 
 if __name__ == "__main__":
