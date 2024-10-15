@@ -1,8 +1,9 @@
 import os
 import sqlite3
+from pathlib import Path
 from tkinter import *
 
-from PIL import ExifTags, Image, ImageTk
+from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
 from digikam_screensaver.settings import DigiKamScreensaverSettings
 
@@ -63,7 +64,15 @@ class DigiKamScreenSaver:
         return image_pil.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
     def _add_caption(self, image_pil: Image, caption: str) -> Image:
-        """TODO: add image caption"""
+        assets_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets"))
+        my_font = ImageFont.truetype(os.path.join(assets_dir, self.settings.font_name), 20)
+        blurred = Image.new("RGBA", image_pil.size)
+        draw = ImageDraw.Draw(blurred)
+        draw.text((10, image_pil.height - 30), caption, font=my_font, fill="black")
+        blurred = blurred.filter(ImageFilter.BoxBlur(7))
+        image_pil.paste(blurred, blurred)
+        image_draw = ImageDraw.Draw(image_pil)
+        image_draw.text((10, image_pil.height - 30), caption, font=my_font, fill="white")
         return image_pil
 
     def show_image(self, i=0):
@@ -74,7 +83,7 @@ class DigiKamScreenSaver:
             image_pil = Image.open(os.path.join(self.settings.pictures_path, self.pictures[i]))
             image_pil = self._rotate_image(image_pil)
             image_pil = self._resize_image(image_pil)
-            image_pil = self._add_caption(image_pil, "00-00-0000")
+            image_pil = self._add_caption(image_pil, self.pictures[i])
             self.tk_margins.append(int((self.width - image_pil.width) / 2))
             self.tk_images.append(ImageTk.PhotoImage(image_pil))
         self.canvas.create_image(self.tk_margins[i], 0, anchor=NW, image=self.tk_images[i])
