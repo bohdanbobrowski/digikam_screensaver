@@ -23,5 +23,4 @@ jobs:
         ruff check .
     - name: Static code analysis with mypy
       run: |
-        mypy --install-types
         mypy ./digikam_screensaver
