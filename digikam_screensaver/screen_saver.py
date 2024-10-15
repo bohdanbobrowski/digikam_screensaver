@@ -5,14 +5,15 @@ from tkinter import NW, Canvas, Event, S, Tk, messagebox
 
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
-from digikam_screensaver.settings import DigiKamScreensaverSettings
+from digikam_screensaver.settings import DigiKamScreensaverSettings, DigiKamScreensaverSettingsHandler
 
 APP_NAME = "DigiKam Screensaver"
 
 
 class DigiKamScreenSaver:
     def __init__(self):
-        self.settings = DigiKamScreensaverSettings()
+        self.settings_handler = DigiKamScreensaverSettingsHandler()
+        self.settings = self.settings_handler.read()
         self.con = self.cursor = None
         self._current_image = self._tk_image = None
         self.pictures = []

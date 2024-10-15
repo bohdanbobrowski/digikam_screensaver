@@ -1,5 +1,6 @@
 import os
 
+import yaml
 from pydantic_settings import BaseSettings  # type:ignore
 
 
@@ -25,3 +26,30 @@ class DigiKamScreensaverSettings(BaseSettings):
     @property
     def target_path(self) -> str:
         return os.path.join(self.pictures_path, self.target_folder)
+
+
+class DigiKamScreensaverSettingsHandler:
+    def __init__(self):
+        self.path = os.path.join(os.getenv("LOCALAPPDATA"), "digikam_screensaver")
+        self._prepare_path()
+        self.settings_file = os.path.join(self.path, "digikam_screensaver.yml")
+
+    def _prepare_path(self):
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
+
+    def read(self) -> DigiKamScreensaverSettings:
+        if not os.path.isfile(self.settings_file):
+            self.save(DigiKamScreensaverSettings())
+        else:
+            with open(self.settings_file, "rb") as stream:
+                data_in_file = yaml.safe_load(stream)
+            if data_in_file:
+                return DigiKamScreensaverSettings(**data_in_file)
+        return DigiKamScreensaverSettings()
+
+    def save(self, data: DigiKamScreensaverSettings):
+        with open(self.settings_file, "w") as outfile:
+            data_dict = data.model_dump()
+            print(data_dict)
+            yaml.dump(data_dict, outfile, default_flow_style=False)
