@@ -40,8 +40,8 @@ info_plist = {
     "NSHighResolutionCapable": True,
 }
 app = BUNDLE(
-    exe,
-    name='digikam_windows_screensaver.exe',
+    scr,
+    name='digikam_windows_screensaver.scr',
     # icon='./assets/digikam.ico',
     bundle_identifier=None,
     info_plist=info_plist

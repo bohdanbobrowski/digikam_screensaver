@@ -158,7 +158,7 @@ def screen_saver():
     digikam_screensaver = DigiKamScreenSaver()
     if "/c" in sys.argv:
         digikam_screensaver.configuration()
-    else:
+    if "/s" in sys.argv:
         digikam_screensaver.screensaver()
 
 

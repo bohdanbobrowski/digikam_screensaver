@@ -25,7 +25,7 @@ Most of features already works. After installing from sources you can:
 
 And then to test screensaver:
 
-    digikam_screensaver
+    digikam_screensaver /s
 
 To build win32 exe:
 
