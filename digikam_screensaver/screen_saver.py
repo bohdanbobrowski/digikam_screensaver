@@ -41,7 +41,7 @@ class DigiKamScreenSaver:
         self.window.mainloop()
 
     @staticmethod
-    def _rotate_image(image_pil: Image) -> Image:
+    def _rotate_image(image_pil: Image.Image) -> Image.Image:
         orientation_tag = None
         for orientation in ExifTags.TAGS.keys():
             if ExifTags.TAGS[orientation] == "Orientation":
@@ -49,7 +49,7 @@ class DigiKamScreenSaver:
                 break
         try:
             if orientation_tag:
-                exif = image_pil._getexif()
+                exif = image_pil.getexif()
                 if exif[orientation_tag] == 3:
                     image_pil = image_pil.rotate(180, expand=True)
                 elif exif[orientation_tag] == 6:
@@ -60,7 +60,7 @@ class DigiKamScreenSaver:
             pass
         return image_pil
 
-    def _resize_image(self, image_pil: Image) -> Image:
+    def _resize_image(self, image_pil: Image.Image) -> Image.Image:
         new_height = self.height
         new_width = int(new_height * image_pil.width / image_pil.height)
         if new_width > self.width:
@@ -68,7 +68,7 @@ class DigiKamScreenSaver:
             new_height = int(new_width * image_pil.height / image_pil.width)
         return image_pil.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
-    def _add_caption(self, image_pil: Image, caption: str) -> Image:
+    def _add_caption(self, image_pil: Image.Image, caption: str) -> Image.Image:
         assets_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets"))
         my_font = ImageFont.truetype(os.path.join(assets_dir, self.settings.font_name), 20)
         blurred = Image.new("RGBA", image_pil.size)
