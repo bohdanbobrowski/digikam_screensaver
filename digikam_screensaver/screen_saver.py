@@ -1,7 +1,7 @@
 import os
 import sqlite3
 import sys
-from tkinter import NW, Canvas, Tk, messagebox
+from tkinter import NW, Canvas, Event, S, Tk, messagebox
 
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
@@ -12,7 +12,8 @@ class DigiKamScreenSaver:
     def __init__(self):
         self.settings = DigiKamScreensaverSettings()
         self.con = self.cursor = None
-        self.pictures = self.tk_images = self.tk_margins = []
+        self._current_image = self._tk_image = None
+        self.pictures = []
         self.width = self.height = self.canvas = None
         self.window = Tk()
 
@@ -25,8 +26,6 @@ class DigiKamScreenSaver:
         self.con = sqlite3.connect(self.settings.database_path)
         self.cursor = self.con.cursor()
         self.pictures = self._get_pictures()
-        self.tk_images = []
-        self.tk_margins = []
         self.window.attributes("-fullscreen", True)
         self.window.title("screen_saver!")
         self.window.configure(background="black")
@@ -34,7 +33,15 @@ class DigiKamScreenSaver:
         self.height = self.window.winfo_screenheight()
         self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
         self._show_image()
+        self.window.bind_all("<Key>", self._exit_scr)
+        self.window.bind_all("<Motion>", self._exit_scr)
+        self.window.bind_all("<Button>", self._exit_scr)
         self.window.mainloop()
+
+    def _exit_scr(self, event: Event):
+        if isinstance(event, Event) and event.keycode == 123:
+            os.startfile(self._current_image)
+        exit()
 
     def configuration(self):
         messagebox.showinfo("showinfo", "Not implemented yet LOL")
@@ -81,18 +88,36 @@ class DigiKamScreenSaver:
         return image_pil
 
     def _show_image(self, i=0):
-        self.canvas.delete("all")
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets"))
         if i >= len(self.pictures):
             i = 0
-        if i not in self.tk_images:
-            image_pil = Image.open(os.path.join(self.settings.pictures_path, self.pictures[i]))
-            image_pil = self._rotate_image(image_pil)
-            image_pil = self._resize_image(image_pil)
-            image_pil = self._add_caption(image_pil, self.pictures[i])
-            self.tk_margins.append((int((self.width - image_pil.width) / 2), int((self.height - image_pil.height) / 2)))
-            self.tk_images.append(ImageTk.PhotoImage(image_pil))
-        self.canvas.create_image(self.tk_margins[i][0], self.tk_margins[i][1], anchor=NW, image=self.tk_images[i])
+            self.pictures = self._get_pictures()
+        self._current_image = os.path.join(self.settings.pictures_path, self.pictures[i])
+        image_pil = Image.open(self._current_image)
+        image_pil = self._rotate_image(image_pil)
+        image_pil = self._resize_image(image_pil)
+        tk_margins = (int((self.width - image_pil.width) / 2), int((self.height - image_pil.height) / 2))
+        self._tk_image = ImageTk.PhotoImage(image_pil)
+        self.canvas.delete("all")
+        self.canvas.create_image(tk_margins[0], tk_margins[1], anchor=NW, image=self._tk_image)
+        self.canvas.create_text(
+            self.width / 2 + 1,
+            self.height - 9,
+            text=self.pictures[i],
+            fill="black",
+            font=(self.settings.font_name, self.settings.font_size),
+            anchor=S,
+        )
+        self.canvas.create_text(
+            self.width / 2,
+            self.height - 10,
+            text=self.pictures[i],
+            fill="white",
+            font=(self.settings.font_name, self.settings.font_size),
+            anchor=S,
+        )
         self.canvas.pack()
+        self.window.config(cursor="none")
         self.window.after(self.settings.timeout, self._show_image, i + 1)
 
     def _get_query(self) -> str:
