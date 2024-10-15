@@ -75,7 +75,7 @@ class DigiKamScreenSaver:
         draw = ImageDraw.Draw(blurred)
         draw.text((10, image_pil.height - 30), caption, font=my_font, fill="black")
         blurred = blurred.filter(ImageFilter.BoxBlur(7))
-        image_pil.paste(blurred, blurred)
+        image_pil.paste(blurred, blurred)  # type: ignore
         image_draw = ImageDraw.Draw(image_pil)
         image_draw.text((10, image_pil.height - 30), caption, font=my_font, fill="white")
         return image_pil
