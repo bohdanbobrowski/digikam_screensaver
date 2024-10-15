@@ -1,9 +1,7 @@
-import argparse
 import os
 import sqlite3
 import sys
-from tkinter import *
-from tkinter import messagebox
+from tkinter import NW, Canvas, Tk, messagebox
 
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
@@ -13,7 +11,7 @@ from digikam_screensaver.settings import DigiKamScreensaverSettings
 class DigiKamScreenSaver:
     def __init__(self):
         self.settings = DigiKamScreensaverSettings()
-        self.con = self.crsr = None
+        self.con = self.cursor = None
         self.pictures = self.tk_images = self.tk_margins = []
         self.width = self.height = self.canvas = None
         self.window = Tk()
@@ -25,7 +23,7 @@ class DigiKamScreenSaver:
             print(f"Digikam database {self.settings.database_path} not found.")
             exit()
         self.con = sqlite3.connect(self.settings.database_path)
-        self.crsr = self.con.cursor()
+        self.cursor = self.con.cursor()
         self.pictures = self._get_pictures()
         self.tk_images = []
         self.tk_margins = []
@@ -108,7 +106,7 @@ class DigiKamScreenSaver:
 
     def _get_pictures(self):
         pictures = []
-        result = self.crsr.execute(self._get_query())
+        result = self.cursor.execute(self._get_query())
         for f in result.fetchall():
             if f[0] is not None:
                 file_path = f[0].replace("/", "\\")[1:]
