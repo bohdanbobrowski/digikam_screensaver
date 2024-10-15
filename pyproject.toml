@@ -20,7 +20,8 @@ maintainers = [
 dependencies = [
     "pydantic",
     "pydantic-settings",
-    "progress"
+    "progress",
+    "pillow",
 ]
 
 [project.optional-dependencies]
