@@ -7,6 +7,8 @@ from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
 from digikam_screensaver.settings import DigiKamScreensaverSettings
 
+APP_NAME = "DigiKam Screensaver"
+
 
 class DigiKamScreenSaver:
     def __init__(self):
@@ -16,18 +18,19 @@ class DigiKamScreenSaver:
         self.pictures = []
         self.width = self.height = self.canvas = None
         self.window = Tk()
+        self.window.title(APP_NAME)
 
     def screensaver(self):
-        if os.path.isfile(self.settings.database_path):
-            print(f"Digikam database {self.settings.database_path} exist.")
-        else:
-            print(f"Digikam database {self.settings.database_path} not found.")
+        self.window.attributes("-fullscreen", True)
+        if not os.path.isfile(self.settings.database_path):
+            messagebox.showinfo(
+                f"Digikam database {self.settings.database_path} not found.",
+                f"{APP_NAME} needs some configuration.",
+            )
             exit()
         self.con = sqlite3.connect(self.settings.database_path)
         self.cursor = self.con.cursor()
         self.pictures = self._get_pictures()
-        self.window.attributes("-fullscreen", True)
-        self.window.title("screen_saver!")
         self.window.configure(background="black", cursor="none")
         self.width = self.window.winfo_screenwidth()
         self.height = self.window.winfo_screenheight()

@@ -8,7 +8,7 @@ class DigiKamScreensaverSettings(BaseSettings):
     TODO: Add class config with some reasonable prefix
     """
 
-    pictures_path: str = "C:\\Users\\bohdan\\Pictures"  # D:\\Pictures
+    pictures_path: str = ""
     database_file: str = "digikam4.db"
     target_folder: str = "Screensaver"
     font_name: str = "Consolas"
