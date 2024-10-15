@@ -2,7 +2,7 @@ import os
 import sqlite3
 from tkinter import *
 
-from PIL import Image, ImageTk, ExifTags
+from PIL import ExifTags, Image, ImageTk
 
 from digikam_screensaver.settings import DigiKamScreensaverSettings
 
@@ -34,17 +34,14 @@ class DigiKamScreenSaver:
         self.show_image()
         self.window.mainloop()
 
-    def show_image(self, i=0):
-        self.canvas.delete("all")
-        if i >= len(self.pictures):
-            i = 0
-        if i not in self.tk_images:
-            image_pil = Image.open(os.path.join(self.settings.pictures_path, self.pictures[i]))
-            orientation_tag = None
-            for orientation in ExifTags.TAGS.keys():
-                if ExifTags.TAGS[orientation] == 'Orientation':
-                    orientation_tag = orientation
-                    break
+    @staticmethod
+    def _rotate_image(image_pil: Image) -> Image:
+        orientation_tag = None
+        for orientation in ExifTags.TAGS.keys():
+            if ExifTags.TAGS[orientation] == "Orientation":
+                orientation_tag = orientation
+                break
+        try:
             if orientation_tag:
                 exif = image_pil._getexif()
                 if exif[orientation_tag] == 3:
@@ -53,17 +50,35 @@ class DigiKamScreenSaver:
                     image_pil = image_pil.rotate(270, expand=True)
                 elif exif[orientation_tag] == 8:
                     image_pil = image_pil.rotate(90, expand=True)
-            if image_pil.height < image_pil.width:
-                new_height = self.height
-                new_width = int(new_height * image_pil.width / image_pil.height)
-            else:
-                new_width = self.width
-                new_height = int(new_width * image_pil.height / image_pil.width)
-            self.canvas.pack()
-            resized_image_pil = image_pil.resize((new_width, new_height), Image.Resampling.LANCZOS)
-            self.tk_margins.append(int((self.width - new_width) / 2))
-            self.tk_images.append(ImageTk.PhotoImage(resized_image_pil))
+        except KeyError:
+            pass
+        return image_pil
+
+    def _resize_image(self, image_pil: Image) -> Image:
+        new_height = self.height
+        new_width = int(new_height * image_pil.width / image_pil.height)
+        if new_width > self.width:
+            new_width = self.width
+            new_height = int(new_width * image_pil.height / image_pil.width)
+        return image_pil.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+    def _add_caption(self, image_pil: Image, caption: str) -> Image:
+        """TODO: add image caption"""
+        return image_pil
+
+    def show_image(self, i=0):
+        self.canvas.delete("all")
+        if i >= len(self.pictures):
+            i = 0
+        if i not in self.tk_images:
+            image_pil = Image.open(os.path.join(self.settings.pictures_path, self.pictures[i]))
+            image_pil = self._rotate_image(image_pil)
+            image_pil = self._resize_image(image_pil)
+            image_pil = self._add_caption(image_pil, "00-00-0000")
+            self.tk_margins.append(int((self.width - image_pil.width) / 2))
+            self.tk_images.append(ImageTk.PhotoImage(image_pil))
         self.canvas.create_image(self.tk_margins[i], 0, anchor=NW, image=self.tk_images[i])
+        self.canvas.pack()
         self.window.after(self.settings.timeout, self.show_image, i + 1)
 
     def _get_query(self) -> str:
