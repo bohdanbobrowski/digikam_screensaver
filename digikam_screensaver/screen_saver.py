@@ -5,7 +5,7 @@ from tkinter import NW, Canvas, Event, S, Tk, messagebox
 
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
-from digikam_screensaver.settings import DigiKamScreensaverSettings, DigiKamScreensaverSettingsHandler
+from digikam_screensaver.settings import DigiKamScreensaverSettingsHandler
 
 APP_NAME = "DigiKam Screensaver"
 
@@ -50,7 +50,8 @@ class DigiKamScreenSaver:
 
     def configuration(self):
         """TODO: Implement configuration window and save/load configuration into yaml."""
-        messagebox.showinfo("showinfo", "Not implemented yet LOL")
+        self.window.title(f"{APP_NAME} - Configuration")
+        self.window.geometry("500x200")
         self.window.mainloop()
 
     @staticmethod

@@ -1,21 +1,18 @@
 # -*- mode: python ; coding: utf-8 -*-
-# block_cipher = None
+block_cipher = None
 a = Analysis(
     ['digikam_screensaver\\screen_saver.py'],
     pathex=[
         '.',
     ],
     datas=[
-        ('./assets/6809_Chargen.otf', '.'),
-        ('./assets/Good_Old_DOS.ttf', '.'),
     ],
     hookspath=[],
     runtime_hooks=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
-    noarchive=False,
-    **get_deps_minimal(video=None, audio=None)
+    noarchive=False
 )
 pyz = PYZ(
     a.pure,
@@ -37,7 +34,7 @@ exe = EXE(
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,
-    # icon='./assets/blog2epub_256px.png'
+    # icon='./assets/digikam_256px.png'
 )
 info_plist = {
     "NSHighResolutionCapable": True,
@@ -45,7 +42,7 @@ info_plist = {
 app = BUNDLE(
     exe,
     name='digikam_windows_screensaver.exe',
-    # icon='./assets/blog2epub.ico',
+    # icon='./assets/digikam.ico',
     bundle_identifier=None,
     info_plist=info_plist
 )
