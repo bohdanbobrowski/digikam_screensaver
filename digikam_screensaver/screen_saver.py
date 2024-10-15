@@ -1,7 +1,9 @@
+import argparse
 import os
 import sqlite3
-from pathlib import Path
+import sys
 from tkinter import *
+from tkinter import messagebox
 
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
@@ -11,6 +13,12 @@ from digikam_screensaver.settings import DigiKamScreensaverSettings
 class DigiKamScreenSaver:
     def __init__(self):
         self.settings = DigiKamScreensaverSettings()
+        self.con = self.crsr = None
+        self.pictures = self.tk_images = self.tk_margins = []
+        self.width = self.height = self.canvas = None
+        self.window = Tk()
+
+    def screensaver(self):
         if os.path.isfile(self.settings.database_path):
             print(f"Digikam database {self.settings.database_path} exist.")
         else:
@@ -18,21 +26,20 @@ class DigiKamScreenSaver:
             exit()
         self.con = sqlite3.connect(self.settings.database_path)
         self.crsr = self.con.cursor()
-
         self.pictures = self._get_pictures()
         self.tk_images = []
         self.tk_margins = []
-
-        self.window = Tk()
         self.window.attributes("-fullscreen", True)
         self.window.title("screen_saver!")
         self.window.configure(background="black")
-        # label = Label(self.window, text=self.pictures[0])
-        # label.pack()
         self.width = self.window.winfo_screenwidth()
         self.height = self.window.winfo_screenheight()
         self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
-        self.show_image()
+        self._show_image()
+        self.window.mainloop()
+
+    def configuration(self):
+        messagebox.showinfo("showinfo", "Not implemented yet LOL")
         self.window.mainloop()
 
     @staticmethod
@@ -75,7 +82,7 @@ class DigiKamScreenSaver:
         image_draw.text((10, image_pil.height - 30), caption, font=my_font, fill="white")
         return image_pil
 
-    def show_image(self, i=0):
+    def _show_image(self, i=0):
         self.canvas.delete("all")
         if i >= len(self.pictures):
             i = 0
@@ -84,11 +91,11 @@ class DigiKamScreenSaver:
             image_pil = self._rotate_image(image_pil)
             image_pil = self._resize_image(image_pil)
             image_pil = self._add_caption(image_pil, self.pictures[i])
-            self.tk_margins.append(int((self.width - image_pil.width) / 2))
+            self.tk_margins.append((int((self.width - image_pil.width) / 2), int((self.height - image_pil.height) / 2)))
             self.tk_images.append(ImageTk.PhotoImage(image_pil))
-        self.canvas.create_image(self.tk_margins[i], 0, anchor=NW, image=self.tk_images[i])
+        self.canvas.create_image(self.tk_margins[i][0], self.tk_margins[i][1], anchor=NW, image=self.tk_images[i])
         self.canvas.pack()
-        self.window.after(self.settings.timeout, self.show_image, i + 1)
+        self.window.after(self.settings.timeout, self._show_image, i + 1)
 
     def _get_query(self) -> str:
         sub_query = "SELECT imageid FROM ImageInformation ii "
@@ -111,9 +118,19 @@ class DigiKamScreenSaver:
         return pictures
 
 
-def main():
-    DigiKamScreenSaver()
+def screen_saver():
+    """
+    /p - Show the screensaver in the screensaver selection dialog box
+    /c - Show the screensaver configuration dialog box
+    /s - Show the screensaver full-screen
+    """
+
+    digikam_screensaver = DigiKamScreenSaver()
+    if "/c" in sys.argv:
+        digikam_screensaver.configuration()
+    else:
+        digikam_screensaver.screensaver()
 
 
 if __name__ == "__main__":
-    main()
+    screen_saver()
