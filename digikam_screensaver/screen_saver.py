@@ -28,7 +28,7 @@ class DigiKamScreenSaver:
         self.pictures = self._get_pictures()
         self.window.attributes("-fullscreen", True)
         self.window.title("screen_saver!")
-        self.window.configure(background="black")
+        self.window.configure(background="black", cursor="none")
         self.width = self.window.winfo_screenwidth()
         self.height = self.window.winfo_screenheight()
         self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
@@ -39,11 +39,13 @@ class DigiKamScreenSaver:
         self.window.mainloop()
 
     def _exit_scr(self, event: Event):
+        """Exit screensaver but when F12 pressed open last image in default program."""
         if isinstance(event, Event) and event.keycode == 123:
             os.startfile(self._current_image)
         exit()
 
     def configuration(self):
+        """TODO: Implement configuration window and save/load configuration into yaml."""
         messagebox.showinfo("showinfo", "Not implemented yet LOL")
         self.window.mainloop()
 
@@ -93,31 +95,31 @@ class DigiKamScreenSaver:
             i = 0
             self.pictures = self._get_pictures()
         self._current_image = os.path.join(self.settings.pictures_path, self.pictures[i])
-        image_pil = Image.open(self._current_image)
-        image_pil = self._rotate_image(image_pil)
-        image_pil = self._resize_image(image_pil)
-        tk_margins = (int((self.width - image_pil.width) / 2), int((self.height - image_pil.height) / 2))
-        self._tk_image = ImageTk.PhotoImage(image_pil)
-        self.canvas.delete("all")
-        self.canvas.create_image(tk_margins[0], tk_margins[1], anchor=NW, image=self._tk_image)
-        self.canvas.create_text(
-            self.width / 2 + 1,
-            self.height - 9,
-            text=self.pictures[i],
-            fill="black",
-            font=(self.settings.font_name, self.settings.font_size),
-            anchor=S,
-        )
-        self.canvas.create_text(
-            self.width / 2,
-            self.height - 10,
-            text=self.pictures[i],
-            fill="white",
-            font=(self.settings.font_name, self.settings.font_size),
-            anchor=S,
-        )
-        self.canvas.pack()
-        self.window.config(cursor="none")
+        if os.path.isfile(self._current_image):
+            image_pil = Image.open(self._current_image)
+            image_pil = self._rotate_image(image_pil)
+            image_pil = self._resize_image(image_pil)
+            tk_margins = (int((self.width - image_pil.width) / 2), int((self.height - image_pil.height) / 2))
+            self._tk_image = ImageTk.PhotoImage(image_pil)
+            self.canvas.delete("all")
+            self.canvas.create_image(tk_margins[0], tk_margins[1], anchor=NW, image=self._tk_image)
+            self.canvas.create_text(
+                self.width / 2 + 1,
+                self.height - 9,
+                text=self.pictures[i],
+                fill="black",
+                font=(self.settings.font_name, self.settings.font_size),
+                anchor=S,
+            )
+            self.canvas.create_text(
+                self.width / 2,
+                self.height - 10,
+                text=self.pictures[i],
+                fill="white",
+                font=(self.settings.font_name, self.settings.font_size),
+                anchor=S,
+            )
+            self.canvas.pack()
         self.window.after(self.settings.timeout, self._show_image, i + 1)
 
     def _get_query(self) -> str:
