@@ -23,6 +23,14 @@ class DigiKamScreenSaver:
 
     def screensaver(self):
         self.window.attributes("-fullscreen", True)
+        self.window.attributes("-topmost", True)
+        # self.window.wm_attributes("-type", "splash")
+        # self.window.wm_overrideredirect(True)
+        self.window.grab_set()
+        self.window.focus_force()
+        self.window.bind("<Key>", self._exit_scr)
+        self.window.bind("<Motion>", self._exit_scr)
+        self.window.bind("<Button>", self._exit_scr)
         if not os.path.isfile(self.settings.database_path):
             messagebox.showinfo(
                 f"Digikam database {self.settings.database_path} not found.",
@@ -33,16 +41,10 @@ class DigiKamScreenSaver:
         self.cursor = self.con.cursor()
         self.pictures = self._get_pictures()
         self.window.configure(background="black", cursor="none")
-        # self.window.wm_attributes("-type", "splash")
-        # self.window.attributes("-topmost", True)
-        # self.window.wm_overrideredirect(True)
         self.width = self.window.winfo_screenwidth()
         self.height = self.window.winfo_screenheight()
         self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
         self._show_image()
-        self.window.bind_all("<Key>", self._exit_scr)
-        self.window.bind_all("<Motion>", self._exit_scr)
-        self.window.bind_all("<Button>", self._exit_scr)
         self.window.mainloop()
 
     def _exit_scr(self, event: Event):
@@ -128,6 +130,9 @@ class DigiKamScreenSaver:
                 anchor=S,
             )
             self.canvas.pack()
+            self.window.grab_set()
+            self.window.focus()
+            self.window.focus_force()
         self.window.after(self.settings.timeout, self._show_image, i + 1)
 
     def _get_query(self) -> str:
