@@ -26,7 +26,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='digikam_windows_screensaver.exe',
+    name='digikam_windows_screensaver',
     debug=False,
     bootloader_ignore_signals=False,
     strip=None,
@@ -40,8 +40,8 @@ info_plist = {
     "NSHighResolutionCapable": True,
 }
 app = BUNDLE(
-    scr,
-    name='digikam_windows_screensaver.scr',
+    exe,
+    name='digikam_windows_screensaver',
     # icon='./assets/digikam.ico',
     bundle_identifier=None,
     info_plist=info_plist
