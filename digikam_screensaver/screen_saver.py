@@ -26,6 +26,8 @@ from tkinter import (
 )
 
 import psutil
+import pywintypes
+import win32gui
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
@@ -130,14 +132,20 @@ class DigiKamScreenSaverConfigurationForm:
 
 
 class DigiKamScreenSaver:
-    def __init__(self):
+    def __init__(self, target_window_handler: int | None = None):
+        self.target_window_handler = target_window_handler
         self.settings_handler = DigiKamScreenSaverSettingsHandler()
         self.settings = self.settings_handler.read()
         self._current_image = self._tk_image = None
-        self.pictures = []
-        self.width = self.height = self.canvas = None
+        self.pictures: list[str] = []
+        self.width = 640
+        self.height = 480
+        self.canvas = None
         self.window = Tk()
         self.window.title(APP_NAME)
+        # windows = Desktop(backend="uia").windows()
+        # for w in windows:
+        #     write_debug_log(f'Handler {w.handle} is for "{w.window_text()}".')
         self.configuration_form = None
         self.cache_file = os.path.join(os.getenv("LOCALAPPDATA"), "digikam_screensaver", "cache.json")  # type: ignore
 
@@ -158,8 +166,6 @@ class DigiKamScreenSaver:
             )
             exit()
         self._read_cache()
-        if not self.pictures:
-            self._get_pictures()
         self.width = self.window.winfo_screenwidth()
         self.height = self.window.winfo_screenheight()
         self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
@@ -169,15 +175,20 @@ class DigiKamScreenSaver:
     def preview(self):
         self.window.configure(background="black")
         self._read_cache()
-        if not self.pictures:
-            self._get_pictures()
         self.width = self.window.winfo_width()
         self.height = self.window.winfo_height()
         if self.width < 640:
             self.width = 640
         if self.height < 320:
             self.height = 320
-        self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
+        if self.target_window_handler:
+            write_debug_log(f"Current window handler is: {int(self.window.frame(), 0)}")
+            target_window = pywintypes.HANDLE(self.target_window_handler)
+            current_window = pywintypes.HANDLE(int(self.window.frame(), 0))
+            win32gui.SetParent(current_window, target_window)  # does not work!
+            self.canvas = Canvas(target_window, width=self.width, height=self.height, bg="black", highlightthickness=0)
+        else:
+            self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
         self._show_image()
         self.window.mainloop()
 
@@ -308,9 +319,12 @@ class DigiKamScreenSaver:
             f.write(content)
 
     def _read_cache(self):
-        with open(self.cache_file) as f:
-            self.pictures = json.load(f)
-        shuffle(self.pictures)
+        try:
+            with open(self.cache_file) as f:
+                self.pictures = json.load(f)
+            shuffle(self.pictures)
+        except FileNotFoundError:
+            self._get_pictures()
 
 
 def screen_saver():
@@ -318,18 +332,37 @@ def screen_saver():
     /p - Show the screensaver in the screensaver selection dialog box
     /s - Show the screensaver full-screen
     /c - Show the screensaver configuration dialog box
+
+    Possible syntax:
+
+    /p:1234
+    /s:1234
+    /p 1234
+    /s 1234
+
+    ...where 1234 is (I guess) parent Windows handler.
+
     """
 
     run_mode = None
     if len(sys.argv) > 1:
-        if sys.argv[1].find("/c") > -1:
+        if sys.argv[len(sys.argv) - 1].startswith("/c") or sys.argv[len(sys.argv) - 2].startswith("/c"):
             run_mode = "configuration"
-        if sys.argv[1].find("/s") > -1:
+        if sys.argv[len(sys.argv) - 1].startswith("/s") or sys.argv[len(sys.argv) - 2].startswith("/s"):
             run_mode = "screensaver"
-        if sys.argv[1].find("/p") > -1:
+        if sys.argv[len(sys.argv) - 1].startswith("/p") or sys.argv[len(sys.argv) - 2].startswith("/p"):
             run_mode = "preview"
+
+    window_handler = None
+    if len(sys.argv) > 1:
+        try:
+            window_handler = int(sys.argv[len(sys.argv) - 1])
+            write_debug_log(f"Target window handler: {window_handler}")
+        except ValueError:
+            pass
+
     if run_mode:
-        digikam_screensaver = DigiKamScreenSaver()
+        digikam_screensaver = DigiKamScreenSaver(target_window_handler=window_handler)
         write_debug_log(f"Started {run_mode}: " + " ".join(sys.argv))
         runner = getattr(digikam_screensaver, run_mode)
         runner()
