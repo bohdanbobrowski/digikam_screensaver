@@ -11,7 +11,7 @@ As for now - this is just for Windows.
 - Takes random starred photos from digikam4.db SQLite databaser file and shows on your beloved window screen.
 - Some configuration is needed.
 - Database is opened in read-only mode!
-- Pressing <F-12> will (obviously) turn off screen saver, and open given picture in associated app.
+- Pressing `<F-12>` will (obviously) turn off screen saver, and open given picture in associated app.
 
 ## What does not work
 
