@@ -165,8 +165,19 @@ class DigiKamScreenSaver:
         self.window.mainloop()
 
     def preview(self):
-        """TODO: Implement preview"""
-        pass
+        self.window.configure(background="black")
+        self.con = sqlite3.connect(f"file:/{self.settings.database_path}?mode=ro", uri=True)
+        self.cursor = self.con.cursor()
+        self.pictures = self._get_pictures()
+        self.width = self.window.winfo_width()
+        self.height = self.window.winfo_height()
+        if self.width<640:
+            self.width = 640
+        if self.height<320:
+            self.height = 320
+        self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
+        self._show_image()
+        self.window.mainloop()
 
     @staticmethod
     def open_image(path):
