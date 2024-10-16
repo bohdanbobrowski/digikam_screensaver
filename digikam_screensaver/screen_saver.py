@@ -26,8 +26,8 @@ from tkinter import (
 )
 
 import psutil
-import pywintypes
-import win32gui
+import pywintypes  # type: ignore
+import win32gui  # type: ignore
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
