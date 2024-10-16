@@ -24,3 +24,4 @@ jobs:
     - name: Static code analysis with mypy
       run: |
         mypy ./digikam_screensaver
+        mypy ./digikam_screensaver_build.py

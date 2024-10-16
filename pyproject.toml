@@ -32,6 +32,7 @@ dev = [
     "ruff",
     "mypy",
     "types-PyYAML",
+    "types-pyinstaller",
     "pyinstaller",
 ]
 
