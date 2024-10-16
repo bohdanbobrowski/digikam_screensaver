@@ -1,37 +1,55 @@
 # DigiKam Screensaver
-Windows screensaver, from pictures loaded out from DigiKam database in Python
 
-## Plan for implementation
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/bohdanbobrowski/digikam_screensaver/graphs/commit-activity) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/) ![GitHub all releases](https://img.shields.io/github/downloads/bohdanbobrowski/digikam_screensaver/total) ![GitHub release (with filter)](https://img.shields.io/github/v/release/bohdanbobrowski/digikam_screensaver) ![GitHub Release Date - Published_At](https://img.shields.io/github/release-date/bohdanbobrowski/digikam_screensaver)
 
-### "Redneck" version
+Windows screensaver, from pictures loaded out from DigiKam database in Python.
 
-To start with, I prepared a simple script that only copies the specified number of starred images from the digiKam database (sqlite only). Such a prepared set can be displayed in one of the ready-made screen savers for Windows.
+As for now - this is just for Windows.
 
-Usage (after installing this package in [*virtual*] environment):
+## Features
 
-    digikam_screensaver_copy_pictures
+- Takes random starred photos from digikam4.db SQLite databaser file and shows on your beloved window screen.
+- Some configuration is needed.
+- Database is opened in read-only mode!
+- Pressing <F-12> will (obviously) turn off screen saver, and open given picture in associated app.
 
-### Real screensaver
+## What does not work
 
-And this is what I plan to implement:
+- preview is displayed in window instead of in dedicated screen.
 
-- a fairly simple slide show, using one of the Python libraries
-- possible simple configuration
-- building the exe file with pyinstaller
+## Dev environment
 
-Most of features already works. After installing from sources you can:
+This will work on Windows cmd:
 
-    digikam_screensaver /c
+    git clone git@github.com:bohdanbobrowski/digikam_screensaver.git
+    cd digikam_screensaver
+    python -m venv venv
+    venv\Scripts\activate
+    pip install -e '.[dev]'
 
-And then to test screensaver:
+Run configuration windows first:
 
-    digikam_screensaver /s
+    python digikam_screensaver/screen_saver.py /c
 
-To build win32 exe:
+It should look like this:
 
-    python digikam_screensaver_build.py
+![digikam_screensaver_configuration_window.jpg](assets%2Fdigikam_screensaver_configuration_window.jpg)
 
-**Additional goal:** to answer the question whether this is even possible using Python? Will such a slideshow be efficient, and is it possible to add some simple animation to the displayed photos?
+Then, to test how does it work just type:
+
+    python digikam_screensaver/screen_saver.py /s
+
+Preview mode can be reached by typing:
+
+    python digikam_screensaver/screen_saver.py /c
+
+### Building own *.scr
+
+If all required stuff is installed in system, this command should make the job:
+
+    python digikam_digikam_screensaver_build.py
+
+You'll find exe in `.\dist` folder - just rename it and install.
 
 ## Documentation and inspiration
 
