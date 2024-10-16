@@ -1,3 +1,4 @@
+import json
 import os
 import shlex
 import sqlite3
@@ -5,6 +6,7 @@ import subprocess
 import sys
 import winreg
 from datetime import datetime
+from random import shuffle
 from tkinter import (
     NW,
     Button,
@@ -131,13 +133,13 @@ class DigiKamScreenSaver:
     def __init__(self):
         self.settings_handler = DigiKamScreenSaverSettingsHandler()
         self.settings = self.settings_handler.read()
-        self.con = self.cursor = None
         self._current_image = self._tk_image = None
         self.pictures = []
         self.width = self.height = self.canvas = None
         self.window = Tk()
         self.window.title(APP_NAME)
         self.configuration_form = None
+        self.cache_file = os.path.join(os.getenv("LOCALAPPDATA"), "digikam_screensaver", "cache.json")  # type: ignore
 
     def screensaver(self):
         self.window.configure(background="black", cursor="none")
@@ -155,9 +157,9 @@ class DigiKamScreenSaver:
                 f"{APP_NAME} needs some configuration.",
             )
             exit()
-        self.con = sqlite3.connect(f"file:/{self.settings.database_path}?mode=ro", uri=True)
-        self.cursor = self.con.cursor()
-        self.pictures = self._get_pictures()
+        self._read_cache()
+        if not self.pictures:
+            self._get_pictures()
         self.width = self.window.winfo_screenwidth()
         self.height = self.window.winfo_screenheight()
         self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
@@ -166,14 +168,14 @@ class DigiKamScreenSaver:
 
     def preview(self):
         self.window.configure(background="black")
-        self.con = sqlite3.connect(f"file:/{self.settings.database_path}?mode=ro", uri=True)
-        self.cursor = self.con.cursor()
-        self.pictures = self._get_pictures()
+        self._read_cache()
+        if not self.pictures:
+            self._get_pictures()
         self.width = self.window.winfo_width()
         self.height = self.window.winfo_height()
-        if self.width<640:
+        if self.width < 640:
             self.width = 640
-        if self.height<320:
+        if self.height < 320:
             self.height = 320
         self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
         self._show_image()
@@ -240,7 +242,7 @@ class DigiKamScreenSaver:
         os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets"))
         if i >= len(self.pictures):
             i = 0
-            self.pictures = self._get_pictures()
+            self._get_pictures()
         current_image = os.path.join(self.settings.pictures_path, self.pictures[i])
         if os.path.isfile(current_image):
             self._current_image = current_image
@@ -289,15 +291,26 @@ class DigiKamScreenSaver:
         return query
 
     def _get_pictures(self):
-        pictures = []
-        result = self.cursor.execute(self._get_query())
+        con = sqlite3.connect(f"file:/{self.settings.database_path}?mode=ro", uri=True)
+        cursor = con.cursor()
+        self.pictures = []
+        result = cursor.execute(self._get_query())
         for f in result.fetchall():
             if f[0] is not None:
                 file_path = f[0].replace("/", "\\")[1:]
                 source_file = os.path.join(self.settings.pictures_path, file_path)
                 if os.path.isfile(source_file):
-                    pictures.append(file_path)
-        return pictures
+                    self.pictures.append(file_path)
+        self._write_cache(json.dumps(self.pictures))
+
+    def _write_cache(self, content: str):
+        with open(self.cache_file, "w") as f:
+            f.write(content)
+
+    def _read_cache(self):
+        with open(self.cache_file) as f:
+            self.pictures = json.load(f)
+        shuffle(self.pictures)
 
 
 def screen_saver():
