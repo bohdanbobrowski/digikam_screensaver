@@ -50,7 +50,8 @@ class DigiKamScreenSaver:
     def _exit_scr(self, event: Event):
         """Exit screensaver but when F12 pressed open last image in default program."""
         if isinstance(event, Event) and event.keycode == 123:
-            os.startfile(self._current_image)
+            # this is Windows only so I needed to add mypy ignore:
+            os.startfile(self._current_image)  # type: ignore
         exit()
 
     def configuration(self):
