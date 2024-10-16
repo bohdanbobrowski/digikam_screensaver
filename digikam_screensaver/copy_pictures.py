@@ -4,15 +4,15 @@ import sqlite3
 
 from progress.bar import Bar  # type:ignore
 
-from digikam_screensaver.settings import DigiKamScreensaverSettings
+from digikam_screensaver.settings import DigiKamScreenSaverSettings
 
 
-class DigiKamScreensaverCopyPictures:
+class DigiKamScreenSaverCopyPictures:
     """This is 'redneck' version of a screensaver - but. simple things are the best.
     The only thing it does is just copying some limited number of starred digiKam pictures to selected folder."""
 
     def __init__(self):
-        self.settings = DigiKamScreensaverSettings()
+        self.settings = DigiKamScreenSaverSettings()
         self.con = sqlite3.connect(self.settings.database_path)
         self.crsr = self.con.cursor()
 
@@ -48,7 +48,7 @@ class DigiKamScreensaverCopyPictures:
 
 
 def copy_pictures():
-    screensaver = DigiKamScreensaverCopyPictures()
+    screensaver = DigiKamScreenSaverCopyPictures()
     screensaver.copy_pictures()
 
 

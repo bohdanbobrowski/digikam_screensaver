@@ -33,6 +33,7 @@ dev = [
     "mypy",
     "types-PyYAML",
     "types-pyinstaller",
+    "types-psutil",
     "pyinstaller",
 ]
 
@@ -48,3 +49,6 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "UP", "B", "I"]
+
+[tool.mypy]
+exclude = ["venv", "dist", "build"]
