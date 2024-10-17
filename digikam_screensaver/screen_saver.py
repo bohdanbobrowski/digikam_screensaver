@@ -26,8 +26,6 @@ from tkinter import (
 )
 
 import psutil
-import pywintypes  # type: ignore
-import win32gui  # type: ignore
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
@@ -55,6 +53,16 @@ def get_default_windows_app(suffix):
     with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, rf"{class_root}\shell\open\command") as key:
         command = winreg.QueryValueEx(key, "")[0]
         return shlex.split(command)[0]
+
+
+def asset_path(filename: str) -> str:
+    try:
+        base_path = sys._MEIPASS  # type: ignore
+    except AttributeError:
+        base_path = os.path.abspath("./assets/")
+    if os.path.isfile(os.path.join(base_path, filename)):
+        return os.path.join(base_path, filename)
+    return os.path.join(os.path.abspath("../assets/"), filename)
 
 
 class DigiKamScreenSaverConfigurationForm:
@@ -141,15 +149,16 @@ class DigiKamScreenSaver:
         self.width = 640
         self.height = 480
         self.canvas = None
+        self.window = None
+        self.configuration_form = None
+        self.cache_file = os.path.join(os.getenv("LOCALAPPDATA"), "digikam_screensaver", "cache.json")  # type: ignore
+
+    def screensaver(self):
         self.window = Tk()
         self.window.title(APP_NAME)
         # windows = Desktop(backend="uia").windows()
         # for w in windows:
         #     write_debug_log(f'Handler {w.handle} is for "{w.window_text()}".')
-        self.configuration_form = None
-        self.cache_file = os.path.join(os.getenv("LOCALAPPDATA"), "digikam_screensaver", "cache.json")  # type: ignore
-
-    def screensaver(self):
         self.window.configure(background="black", cursor="none")
         self.window.attributes("-fullscreen", True)
         self.window.attributes("-topmost", True)
@@ -173,23 +182,16 @@ class DigiKamScreenSaver:
         self.window.mainloop()
 
     def preview(self):
-        self.window.configure(background="black")
-        self._read_cache()
-        self.width = self.window.winfo_width()
-        self.height = self.window.winfo_height()
-        if self.width < 640:
-            self.width = 640
-        if self.height < 320:
-            self.height = 320
-        if self.target_window_handler:
-            write_debug_log(f"Current window handler is: {int(self.window.frame(), 0)}")
-            target_window = pywintypes.HANDLE(self.target_window_handler)
-            current_window = pywintypes.HANDLE(int(self.window.frame(), 0))
-            win32gui.SetParent(current_window, target_window)  # does not work!
-            self.canvas = Canvas(target_window, width=self.width, height=self.height, bg="black", highlightthickness=0)
-        else:
-            self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
-        self._show_image()
+        """TODO: this part needs reimplementation"""
+        pass
+
+    def configuration(self):
+        self.window = Tk()
+        self.window.iconbitmap(asset_path("digikam.ico"))
+        self.window.title(APP_NAME)
+        self.window.title(f"{APP_NAME} - Configuration")
+        self.window.geometry("400x300")
+        self.configuration_form = DigiKamScreenSaverConfigurationForm(self.window, self.settings)
         self.window.mainloop()
 
     @staticmethod
@@ -202,12 +204,6 @@ class DigiKamScreenSaver:
         if isinstance(event, Event) and event.keycode == 123:
             self.open_image(self._current_image)
         self.window.destroy()
-
-    def configuration(self):
-        self.window.title(f"{APP_NAME} - Configuration")
-        self.window.geometry("400x300")
-        self.configuration_form = DigiKamScreenSaverConfigurationForm(self.window, self.settings)
-        self.window.mainloop()
 
     @staticmethod
     def _rotate_image(image_pil: Image.Image) -> Image.Image:

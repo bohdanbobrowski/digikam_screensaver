@@ -4,7 +4,9 @@ a = Analysis(
     pathex=[
         ".",
     ],
-    datas=[],
+    datas=[
+        ("assets/digikam.ico", "."),
+    ],
     hiddenimports=["comtypes.stream"],
     hookspath=[],
     runtime_hooks=[],
@@ -21,7 +23,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name="digikam_windows_screensaver",
+    name="DigiKam Screensaver",
     debug=False,
     bootloader_ignore_signals=False,
     strip=None,
@@ -29,15 +31,15 @@ exe = EXE(
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,
-    # icon='./assets/digikam_256px.png'
+    icon="./assets/digikam.ico",
 )
 info_plist = {
     "NSHighResolutionCapable": True,
 }
 app = BUNDLE(
     exe,
-    name="digikam_windows_screensaver",
-    # icon='./assets/digikam.ico',
+    name="DigiKam Screensaver",
+    icon="./assets/digikam.ico",
     bundle_identifier=None,
     info_plist=info_plist,
 )
