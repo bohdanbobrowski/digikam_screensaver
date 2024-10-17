@@ -25,7 +25,7 @@ from tkinter import (
     messagebox,
 )
 
-import psutil
+import psutil  # type: ignore
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
@@ -146,8 +146,7 @@ class DigiKamScreenSaver:
         self.settings = self.settings_handler.read()
         self._current_image = self._tk_image = None
         self.pictures: list[str] = []
-        self.width = 640
-        self.height = 480
+        self.width, self.height = (640, 480)
         self.canvas = None
         self.window = None
         self.configuration_form = None
@@ -203,7 +202,8 @@ class DigiKamScreenSaver:
         """Exit screensaver but when F12 pressed open last image in default program."""
         if isinstance(event, Event) and event.keycode == 123:
             self.open_image(self._current_image)
-        self.window.destroy()
+        if self.window is not None:
+            self.window.destroy()
 
     @staticmethod
     def _rotate_image(image_pil: Image.Image) -> Image.Image:
