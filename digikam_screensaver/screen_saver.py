@@ -69,6 +69,7 @@ class DigiKamScreenSaverConfigurationForm:
     def __init__(self, root: Tk, settings: DigiKamScreenSaverSettings):
         self.root = root
         self.settings = settings
+        self.font_families = sorted(list(font.families()))
 
         validate_numeric = (self.root.register(self._validate_numeric), "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W")
 
@@ -90,7 +91,7 @@ class DigiKamScreenSaverConfigurationForm:
         self.font_name_label.grid(row=2, column=0, sticky=E, pady=5, padx=5)
         self.font_name_variable = StringVar()
         self.font_name_variable.set(self.settings.font_name)
-        self.font_name_entry = OptionMenu(self.root, self.font_name_variable, *font.families())
+        self.font_name_entry = OptionMenu(self.root, self.font_name_variable, *self.font_families)
         self.font_name_entry.grid(row=2, column=1, sticky=W, pady=5, padx=5)
 
         self.font_size_label = Label(self.root, text="Caption font size:")

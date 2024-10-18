@@ -68,10 +68,15 @@ You'll find exe in `.\dist` folder - just rename it and install.
 1. https://github.com/SirGnip/arcade_screensaver_framework
 2. https://github.com/gaming32/Windows-Screensaver
 
+This might be interesting, according attaching window to given win32 handler:
+
+3. https://github.com/quasar098/dvd-screensaver/blob/master/main.py
+
 ### C:
 
-3. https://github.com/henrypp/matrix
+4. https://github.com/henrypp/matrix
 
 ### Win32 Screensaver API documentation:
 
-4. https://learn.microsoft.com/en-us/windows/win32/lwef/screen-saver-library
+5. https://learn.microsoft.com/en-us/windows/win32/lwef/screen-saver-library
+6. https://learn.microsoft.com/en-us/previous-versions/troubleshoot/windows/win32/screen-saver-command-line
