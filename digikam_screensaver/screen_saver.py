@@ -26,6 +26,9 @@ from tkinter import (
 )
 
 import psutil  # type: ignore
+import pygame
+import win32gui
+from ctypes import windll
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
@@ -182,8 +185,20 @@ class DigiKamScreenSaver:
         self.window.mainloop()
 
     def preview(self):
-        """TODO: this part needs reimplementation"""
-        pass
+        pygame.init()
+        pygame.display.set_mode((190, 140))
+        pygame.display.flip()
+        if self.target_window_handler:
+            write_debug_log(f"Set parent {pygame.display.get_wm_info()["window"]}->{self.target_window_handler}")
+            win32gui.SetParent(pygame.display.get_wm_info()["window"], self.target_window_handler)
+        surface = pygame.display.set_mode((190, 140))
+        surface.fill((255, 0, 0))
+        pygame.display.flip()
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
 
     def configuration(self):
         self.window = Tk()
