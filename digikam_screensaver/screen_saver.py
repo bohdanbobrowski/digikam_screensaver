@@ -32,7 +32,6 @@ import win32gui
 
 # from ctypes import windll
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
-from win32ctypes.pywin32 import pywintypes
 
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
 
@@ -165,9 +164,6 @@ class DigiKamScreenSaver:
     def screensaver(self):
         self.window = Tk()
         self.window.title(APP_NAME)
-        # windows = Desktop(backend="uia").windows()
-        # for w in windows:
-        #     logger.info(f'Handler {w.handle} is for "{w.window_text()}".')
         self.window.configure(background="black", cursor="none")
         self.window.attributes("-fullscreen", True)
         self.window.attributes("-topmost", True)
@@ -197,11 +193,14 @@ class DigiKamScreenSaver:
             x, y, width, height = win32gui.GetClientRect(self.target_window_handler)
             logger.info(f"Parent parameters: x={x}, y={y}, width={width}, height={height}.")
             os.environ["SDL_VIDEO_WINDOW_POS"] = "%d,%d" % (x, y)
-            surface = pygame.display.set_mode((width, height), pygame.FULLSCREEN)
+            surface = pygame.display.set_mode((width, height), pygame.NOFRAME)
             surface.fill((255, 0, 0))
+            pygame.draw.rect(surface, (255, 255, 0), pygame.Rect(x, y, width, height))
+            pygame.display.flip()
             pygame.display.flip()
             logger.info(f"Set parent {pygame.display.get_wm_info()["window"]}->{self.target_window_handler}")
             win32gui.SetParent(pygame.display.get_wm_info()["window"], self.target_window_handler)
+            win32gui.SetWindowPos(pygame.display.get_wm_info()["window"], -1, x, y, 0, 0, 1)
         else:
             os.environ["SDL_VIDEO_WINDOW_POS"] = "%d,%d" % (x, y)
             surface = pygame.display.set_mode((width, height))
@@ -211,8 +210,8 @@ class DigiKamScreenSaver:
             if self.target_window_handler:
                 try:
                     win32gui.GetClientRect(self.target_window_handler)
-                except pywintypes.error:
-                    logger.info("Exiting: parent window has been closed.")
+                except Exception:  # type: ignore
+                    logger.info("Exiting preview: parent window has been closed.")
                     pygame.quit()
                     sys.exit()
             for event in pygame.event.get():
@@ -376,12 +375,10 @@ def screen_saver():
 
     """
 
-    run_mode = None
+    run_mode = "screensaver"
     if len(sys.argv) > 1:
         if sys.argv[len(sys.argv) - 1].startswith("/c") or sys.argv[len(sys.argv) - 2].startswith("/c"):
             run_mode = "configuration"
-        if sys.argv[len(sys.argv) - 1].startswith("/s") or sys.argv[len(sys.argv) - 2].startswith("/s"):
-            run_mode = "screensaver"
         if sys.argv[len(sys.argv) - 1].startswith("/p") or sys.argv[len(sys.argv) - 2].startswith("/p"):
             run_mode = "preview"
 
@@ -393,9 +390,9 @@ def screen_saver():
         except ValueError:
             pass
 
+    logger.info(f"Starting {run_mode}: " + " ".join(sys.argv))
     if run_mode:
         digikam_screensaver = DigiKamScreenSaver(target_window_handler=window_handler)
-        logger.info(f"Started {run_mode}: " + " ".join(sys.argv))
         runner = getattr(digikam_screensaver, run_mode)
         runner()
 
