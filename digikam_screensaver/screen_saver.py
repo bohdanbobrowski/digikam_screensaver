@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import shlex
 import sqlite3
@@ -28,19 +29,23 @@ from tkinter import (
 import psutil  # type: ignore
 import pygame
 import win32gui
-from ctypes import windll
+
+# from ctypes import windll
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
 
 APP_NAME = "DigiKam Screensaver"
 
-
-def write_debug_log(message: str):
-    f_path = os.path.join(os.getenv("LOCALAPPDATA"), "digikam_screensaver", "debug.log")  # type: ignore
-    with open(f_path, "a") as f:
-        date = datetime.now()
-        f.write(f"{date.strftime("%Y-%m-%d %H:%M:%S")} {message}\n")
+logging.basicConfig(
+    filename=os.path.join(str(os.getenv("LOCALAPPDATA")), "digikam_screensaver", "debug.log"),
+    filemode="a",
+    format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
+    datefmt="%H:%M:%S",
+    level=logging.INFO,
+)
+logger = logging.getLogger(APP_NAME)
+logger.info(f"Running {APP_NAME}")
 
 
 def write_history(file_name: str):
@@ -161,7 +166,7 @@ class DigiKamScreenSaver:
         self.window.title(APP_NAME)
         # windows = Desktop(backend="uia").windows()
         # for w in windows:
-        #     write_debug_log(f'Handler {w.handle} is for "{w.window_text()}".')
+        #     logger.info(f'Handler {w.handle} is for "{w.window_text()}".')
         self.window.configure(background="black", cursor="none")
         self.window.attributes("-fullscreen", True)
         self.window.attributes("-topmost", True)
@@ -189,7 +194,7 @@ class DigiKamScreenSaver:
         pygame.display.set_mode((190, 140))
         pygame.display.flip()
         if self.target_window_handler:
-            write_debug_log(f"Set parent {pygame.display.get_wm_info()["window"]}->{self.target_window_handler}")
+            logger.info(f"Set parent {pygame.display.get_wm_info()["window"]}->{self.target_window_handler}")
             win32gui.SetParent(pygame.display.get_wm_info()["window"], self.target_window_handler)
         surface = pygame.display.set_mode((190, 140))
         surface.fill((255, 0, 0))
@@ -292,13 +297,13 @@ class DigiKamScreenSaver:
                 font=(self.settings.font_name, self.settings.font_size),
                 anchor=S,
             )
-            write_debug_log(f"Image loaded: {current_image}")
+            logger.info(f"Image loaded: {current_image}")
             write_history(current_image)
             memory_used = psutil.Process(os.getpid()).memory_info().rss / 1024**2
-            write_debug_log(f"Memory used: {memory_used}")
+            logger.info(f"Memory used: {memory_used}")
             self.canvas.pack()
         else:
-            write_debug_log(f"Image does not exist: {current_image}")
+            logger.info(f"Image does not exist: {current_image}")
         self.window.grab_set()
         self.window.focus()
         self.window.focus_force()
@@ -369,13 +374,13 @@ def screen_saver():
     if len(sys.argv) > 1:
         try:
             window_handler = int(sys.argv[len(sys.argv) - 1])
-            write_debug_log(f"Target window handler: {window_handler}")
+            logger.info(f"Target window handler: {window_handler}")
         except ValueError:
             pass
 
     if run_mode:
         digikam_screensaver = DigiKamScreenSaver(target_window_handler=window_handler)
-        write_debug_log(f"Started {run_mode}: " + " ".join(sys.argv))
+        logger.info(f"Started {run_mode}: " + " ".join(sys.argv))
         runner = getattr(digikam_screensaver, run_mode)
         runner()
 

@@ -22,6 +22,7 @@ dependencies = [
     "pydantic-settings",
     "progress",
     "pillow",
+    "pygame",
     "pywinauto",
     "pyyaml",
     "comtypes",
@@ -36,6 +37,7 @@ dev = [
     "types-PyYAML",
     "types-pyinstaller",
     "types-psutil",
+    "types-pywin32",
     "pyinstaller",
 ]
 
