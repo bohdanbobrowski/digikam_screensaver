@@ -20,10 +20,9 @@ maintainers = [
 dependencies = [
     "pydantic",
     "pydantic-settings",
-    "progress",
     "pillow",
-    "pygame",
-    "pywinauto",
+    # "pygame",
+    # "pywinauto",
     "pyyaml",
     "comtypes",
 ]
@@ -37,7 +36,7 @@ dev = [
     "types-PyYAML",
     "types-pyinstaller",
     "types-psutil",
-    "types-pywin32",
+    # "types-pywin32",
     "pyinstaller",
 ]
 
