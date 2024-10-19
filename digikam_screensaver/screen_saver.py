@@ -28,8 +28,6 @@ from tkinter import (
 
 import psutil  # type: ignore
 import screeninfo
-
-# from ctypes import windll
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
@@ -290,6 +288,7 @@ class DigiKamScreenSaver:
             self._get_pictures()
 
     def screensaver(self):
+        """TODO: handle multiple displays and consider usage of pygame."""
         self.window = Tk()
         self.window.title(APP_NAME)
         self.window.configure(background="black", cursor="none")
@@ -354,7 +353,7 @@ def screen_saver():
     /p 1234
     /s 1234
 
-    ...where 1234 is (I guess) parent Windows handler.
+    ...where 1234 is parent window handler (win32gui stuff)
 
     """
 
