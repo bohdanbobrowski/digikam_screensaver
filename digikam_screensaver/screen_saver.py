@@ -191,15 +191,18 @@ class DigiKamScreenSaver:
 
     def preview(self):
         pygame.init()
-        pygame.display.set_mode((190, 140))
-        pygame.display.flip()
+        x, y, width, height = (0, 0, 320, 200)
         if self.target_window_handler:
+            x, y, width, height = win32gui.GetClientRect(self.target_window_handler)
             logger.info(f"Set parent {pygame.display.get_wm_info()["window"]}->{self.target_window_handler}")
             win32gui.SetParent(pygame.display.get_wm_info()["window"], self.target_window_handler)
-        surface = pygame.display.set_mode((190, 140))
+        os.environ["SDL_VIDEO_WINDOW_POS"] = "%d,%d" % (x, y)
+        surface = pygame.display.set_mode((width, height))
         surface.fill((255, 0, 0))
         pygame.display.flip()
         while True:
+            if self.target_window_handler:
+                win32gui.GetClientRect(self.target_window_handler)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
