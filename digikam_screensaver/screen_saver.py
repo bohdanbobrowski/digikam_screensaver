@@ -32,6 +32,7 @@ import win32gui
 
 # from ctypes import windll
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
+from win32ctypes.pywin32 import pywintypes
 
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
 
@@ -194,15 +195,26 @@ class DigiKamScreenSaver:
         x, y, width, height = (0, 0, 320, 200)
         if self.target_window_handler:
             x, y, width, height = win32gui.GetClientRect(self.target_window_handler)
+            logger.info(f"Parent parameters: x={x}, y={y}, width={width}, height={height}.")
+            os.environ["SDL_VIDEO_WINDOW_POS"] = "%d,%d" % (x, y)
+            surface = pygame.display.set_mode((width, height), pygame.FULLSCREEN)
+            surface.fill((255, 0, 0))
+            pygame.display.flip()
             logger.info(f"Set parent {pygame.display.get_wm_info()["window"]}->{self.target_window_handler}")
             win32gui.SetParent(pygame.display.get_wm_info()["window"], self.target_window_handler)
-        os.environ["SDL_VIDEO_WINDOW_POS"] = "%d,%d" % (x, y)
-        surface = pygame.display.set_mode((width, height))
-        surface.fill((255, 0, 0))
-        pygame.display.flip()
+        else:
+            os.environ["SDL_VIDEO_WINDOW_POS"] = "%d,%d" % (x, y)
+            surface = pygame.display.set_mode((width, height))
+            surface.fill((255, 0, 0))
+            pygame.display.flip()
         while True:
             if self.target_window_handler:
-                win32gui.GetClientRect(self.target_window_handler)
+                try:
+                    win32gui.GetClientRect(self.target_window_handler)
+                except pywintypes.error:
+                    logger.info("Exiting: parent window has been closed.")
+                    pygame.quit()
+                    sys.exit()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
