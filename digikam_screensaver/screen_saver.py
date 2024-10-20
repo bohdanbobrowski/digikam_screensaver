@@ -27,7 +27,6 @@ from tkinter import (
 )
 
 import psutil  # type: ignore
-import screeninfo
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
@@ -357,7 +356,6 @@ def screen_saver():
 
     """
 
-    print(screeninfo.get_monitors())
     run_mode = None
     if len(sys.argv) > 1:
         if sys.argv[len(sys.argv) - 1].lower().startswith("/c") or sys.argv[len(sys.argv) - 2].lower().startswith("/c"):
