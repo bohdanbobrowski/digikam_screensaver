@@ -80,3 +80,8 @@ This might be interesting, according attaching window to given win32 handler:
 
 5. https://learn.microsoft.com/en-us/windows/win32/lwef/screen-saver-library
 6. https://learn.microsoft.com/en-us/previous-versions/troubleshoot/windows/win32/screen-saver-command-line
+
+### Other:
+
+8. Interesting discussion about screensaver settings window (which didn't changed since 20 years):
+https://www.reddit.com/r/Windows11/comments/q0b427/the_screensaver_settings_have_looked_like_this/
