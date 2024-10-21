@@ -27,12 +27,7 @@ from tkinter import (
 )
 
 import psutil  # type: ignore
-import pygame
-import win32gui
-
-# from ctypes import windll
 from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
-from win32ctypes.pywin32 import pywintypes
 
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
 
@@ -161,73 +156,6 @@ class DigiKamScreenSaver:
         self.window = None
         self.configuration_form = None
         self.cache_file = os.path.join(os.getenv("LOCALAPPDATA"), "digikam_screensaver", "cache.json")  # type: ignore
-
-    def screensaver(self):
-        self.window = Tk()
-        self.window.title(APP_NAME)
-        # windows = Desktop(backend="uia").windows()
-        # for w in windows:
-        #     logger.info(f'Handler {w.handle} is for "{w.window_text()}".')
-        self.window.configure(background="black", cursor="none")
-        self.window.attributes("-fullscreen", True)
-        self.window.attributes("-topmost", True)
-        self.window.grab_set()
-        self.window.focus()
-        self.window.focus_force()
-        self.window.bind("<Key>", self._exit_scr)
-        self.window.bind("<Motion>", self._exit_scr)
-        self.window.bind("<Button>", self._exit_scr)
-        if not os.path.isfile(self.settings.database_path):
-            messagebox.showinfo(
-                f"Digikam database {self.settings.database_path} not found.",
-                f"{APP_NAME} needs some configuration.",
-            )
-            exit()
-        self._read_cache()
-        self.width = self.window.winfo_screenwidth()
-        self.height = self.window.winfo_screenheight()
-        self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
-        self._show_image()
-        self.window.mainloop()
-
-    def preview(self):
-        pygame.init()
-        x, y, width, height = (0, 0, 320, 200)
-        if self.target_window_handler:
-            x, y, width, height = win32gui.GetClientRect(self.target_window_handler)
-            logger.info(f"Parent parameters: x={x}, y={y}, width={width}, height={height}.")
-            os.environ["SDL_VIDEO_WINDOW_POS"] = "%d,%d" % (x, y)
-            surface = pygame.display.set_mode((width, height), pygame.FULLSCREEN)
-            surface.fill((255, 0, 0))
-            pygame.display.flip()
-            logger.info(f"Set parent {pygame.display.get_wm_info()["window"]}->{self.target_window_handler}")
-            win32gui.SetParent(pygame.display.get_wm_info()["window"], self.target_window_handler)
-        else:
-            os.environ["SDL_VIDEO_WINDOW_POS"] = "%d,%d" % (x, y)
-            surface = pygame.display.set_mode((width, height))
-            surface.fill((255, 0, 0))
-            pygame.display.flip()
-        while True:
-            if self.target_window_handler:
-                try:
-                    win32gui.GetClientRect(self.target_window_handler)
-                except pywintypes.error:
-                    logger.info("Exiting: parent window has been closed.")
-                    pygame.quit()
-                    sys.exit()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-
-    def configuration(self):
-        self.window = Tk()
-        self.window.iconbitmap(asset_path("digikam.ico"))
-        self.window.title(APP_NAME)
-        self.window.title(f"{APP_NAME} - Configuration")
-        self.window.geometry("400x300")
-        self.configuration_form = DigiKamScreenSaverConfigurationForm(self.window, self.settings)
-        self.window.mainloop()
 
     @staticmethod
     def open_image(path):
@@ -358,6 +286,58 @@ class DigiKamScreenSaver:
         except FileNotFoundError:
             self._get_pictures()
 
+    def screensaver(self):
+        """TODO: handle multiple displays and consider usage of pygame."""
+        self.window = Tk()
+        self.window.title(APP_NAME)
+        self.window.configure(background="black", cursor="none")
+        self.window.attributes("-fullscreen", True)
+        self.window.attributes("-topmost", True)
+        self.window.grab_set()
+        self.window.focus()
+        self.window.focus_force()
+        self.window.bind("<Key>", self._exit_scr)
+        self.window.bind("<Motion>", self._exit_scr)
+        self.window.bind("<Button>", self._exit_scr)
+        if not os.path.isfile(self.settings.database_path):
+            messagebox.showinfo(
+                f"Digikam database {self.settings.database_path} not found.",
+                f"{APP_NAME} needs some configuration.",
+            )
+            exit()
+        self._read_cache()
+        self.width = self.window.winfo_screenwidth()
+        self.height = self.window.winfo_screenheight()
+        self.canvas = Canvas(self.window, width=self.width, height=self.height, bg="black", highlightthickness=0)
+        self._show_image()
+        self.window.mainloop()
+
+    def preview(self):
+        """This function should display screensaver preview in small window of windows screensaver picker.
+
+        But there are some problems with that:
+
+        1. Even if I use win32gui.SetParent to put screensaver inside preview window nothing shows up there (except
+           some glitches).
+        2. In preview mode "Digikam Screensaver" is started and I don't know how to close it.
+
+        I found that this functionality is often omitted in screensavers written in c/c++, but there are examples that
+        it works:
+        - https://github.com/rgoring/asciiquarium/tree/master
+
+
+        """
+        pass
+
+    def configuration(self):
+        self.window = Tk()
+        self.window.iconbitmap(asset_path("digikam.ico"))
+        self.window.title(APP_NAME)
+        self.window.title(f"{APP_NAME} - Configuration")
+        self.window.geometry("400x300")
+        self.configuration_form = DigiKamScreenSaverConfigurationForm(self.window, self.settings)
+        self.window.mainloop()
+
 
 def screen_saver():
     """
@@ -372,18 +352,18 @@ def screen_saver():
     /p 1234
     /s 1234
 
-    ...where 1234 is (I guess) parent Windows handler.
+    ...where 1234 is parent window handler (win32gui stuff)
 
     """
 
     run_mode = None
     if len(sys.argv) > 1:
-        if sys.argv[len(sys.argv) - 1].startswith("/c") or sys.argv[len(sys.argv) - 2].startswith("/c"):
+        if sys.argv[len(sys.argv) - 1].lower().startswith("/c") or sys.argv[len(sys.argv) - 2].lower().startswith("/c"):
             run_mode = "configuration"
-        if sys.argv[len(sys.argv) - 1].startswith("/s") or sys.argv[len(sys.argv) - 2].startswith("/s"):
-            run_mode = "screensaver"
-        if sys.argv[len(sys.argv) - 1].startswith("/p") or sys.argv[len(sys.argv) - 2].startswith("/p"):
+        if sys.argv[len(sys.argv) - 1].lower().startswith("/p") or sys.argv[len(sys.argv) - 2].lower().startswith("/p"):
             run_mode = "preview"
+        if sys.argv[len(sys.argv) - 1].lower().startswith("/s") or sys.argv[len(sys.argv) - 2].lower().startswith("/s"):
+            run_mode = "screensaver"
 
     window_handler = None
     if len(sys.argv) > 1:
@@ -394,8 +374,8 @@ def screen_saver():
             pass
 
     if run_mode:
+        logger.info(f"Starting {run_mode}: " + " ".join(sys.argv))
         digikam_screensaver = DigiKamScreenSaver(target_window_handler=window_handler)
-        logger.info(f"Started {run_mode}: " + " ".join(sys.argv))
         runner = getattr(digikam_screensaver, run_mode)
         runner()
 
