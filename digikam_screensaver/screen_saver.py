@@ -216,37 +216,41 @@ class DigiKamScreenSaver:
             self._get_pictures()
         current_image = os.path.join(self.settings.pictures_path, self.pictures[i])
         if os.path.isfile(current_image):
-            self._current_image = current_image
-            image_pil = Image.open(self._current_image)
-            image_pil = self._rotate_image(image_pil)
-            image_pil = self._resize_image(image_pil)
-            tk_margins = (int((self.width - image_pil.width) / 2), int((self.height - image_pil.height) / 2))
-            self._tk_image = ImageTk.PhotoImage(image_pil)
-            self.canvas.delete("all")
-            self.canvas.create_image(tk_margins[0], tk_margins[1], anchor=NW, image=self._tk_image)
-            self.canvas.create_text(
-                self.width / 2 + 1,
-                self.height - 9,
-                text=self.pictures[i],
-                fill="black",
-                font=(self.settings.font_name, self.settings.font_size),
-                anchor=S,
-            )
-            self.canvas.create_text(
-                self.width / 2,
-                self.height - 10,
-                text=self.pictures[i],
-                fill="white",
-                font=(self.settings.font_name, self.settings.font_size),
-                anchor=S,
-            )
-            logger.info(f"Image loaded: {current_image}")
-            write_history(current_image)
-            memory_used = psutil.Process(os.getpid()).memory_info().rss / 1024**2
-            logger.info(f"Memory used: {memory_used}")
-            self.canvas.pack()
+            try:
+                self._current_image = current_image
+                image_pil = Image.open(self._current_image)
+                image_pil = self._rotate_image(image_pil)
+                image_pil = self._resize_image(image_pil)
+                tk_margins = (int((self.width - image_pil.width) / 2), int((self.height - image_pil.height) / 2))
+                self._tk_image = ImageTk.PhotoImage(image_pil)
+                self.canvas.delete("all")
+                self.canvas.create_image(tk_margins[0], tk_margins[1], anchor=NW, image=self._tk_image)
+                self.canvas.create_text(
+                    self.width / 2 + 1,
+                    self.height - 9,
+                    text=self.pictures[i],
+                    fill="black",
+                    font=(self.settings.font_name, self.settings.font_size),
+                    anchor=S,
+                )
+                self.canvas.create_text(
+                    self.width / 2,
+                    self.height - 10,
+                    text=self.pictures[i],
+                    fill="white",
+                    font=(self.settings.font_name, self.settings.font_size),
+                    anchor=S,
+                )
+                logger.info(f"Image loaded: {current_image}")
+                write_history(current_image)
+                memory_used = psutil.Process(os.getpid()).memory_info().rss / 1024**2
+                logger.info(f"Memory used: {memory_used}")
+                self.canvas.pack()
+            except OSError as e:
+                logger.error(f"Error loading file: {current_image}")
+                logger.error(f"Exception: {e}")
         else:
-            logger.info(f"Image does not exist: {current_image}")
+            logger.error(f"Image does not exist: {current_image}")
         self.window.grab_set()
         self.window.focus()
         self.window.focus_force()
@@ -287,7 +291,6 @@ class DigiKamScreenSaver:
             self._get_pictures()
 
     def screensaver(self):
-        """TODO: handle multiple displays and consider usage of pygame."""
         self.window = Tk()
         self.window.title(APP_NAME)
         self.window.configure(background="black", cursor="none")
@@ -324,8 +327,6 @@ class DigiKamScreenSaver:
         I found that this functionality is often omitted in screensavers written in c/c++, but there are examples that
         it works:
         - https://github.com/rgoring/asciiquarium/tree/master
-
-
         """
         pass
 
@@ -353,7 +354,6 @@ def screen_saver():
     /s 1234
 
     ...where 1234 is parent window handler (win32gui stuff)
-
     """
 
     run_mode = None
