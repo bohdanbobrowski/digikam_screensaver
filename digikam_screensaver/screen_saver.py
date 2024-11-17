@@ -32,11 +32,15 @@ from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
 
-APP_NAME = "DigiKam Screensaver"
-VERSION = "0.3"
+APP_NAME: str = "DigiKam Screensaver"
+VERSION: str = "0.3"
+CONFIG_PATH: str = os.path.join(str(os.getenv("LOCALAPPDATA")), "digikam_screensaver")
+
+if not os.path.exists(CONFIG_PATH):
+    os.makedirs(CONFIG_PATH)
 
 logging.basicConfig(
-    filename=os.path.join(str(os.getenv("LOCALAPPDATA")), "digikam_screensaver", "debug.log"),
+    filename=os.path.join(CONFIG_PATH, "debug.log"),
     filemode="a",
     format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
     datefmt="%H:%M:%S",
@@ -47,7 +51,7 @@ logger.info(f"Running {APP_NAME} v.{VERSION}")
 
 
 def write_history(file_name: str):
-    f_path = os.path.join(os.getenv("LOCALAPPDATA"), "digikam_screensaver", "history.csv")  # type: ignore
+    f_path = os.path.join(CONFIG_PATH, "history.csv")  # type: ignore
     with open(f_path, "a") as f:
         date = datetime.now()
         f.write(f"\"{date.strftime("%Y-%m-%d %H:%M:%S")}\",\"{file_name}\"\n")
@@ -182,7 +186,7 @@ class DigiKamScreenSaver:
         self.canvas = None
         self.window = None
         self.configuration_form = None
-        self.cache_file = os.path.join(os.getenv("LOCALAPPDATA"), "digikam_screensaver", "cache.json")  # type: ignore
+        self.cache_file = os.path.join(CONFIG_PATH, "cache.json")  # type: ignore
         self._extensions: list[str] = ["JPG", "GIF", "PNG"]
         self._demo_mode: bool = False
 
