@@ -6,6 +6,8 @@ a = Analysis(
     ],
     datas=[
         ("assets/digikam.ico", "."),
+        ("./assets/default_slide_1.gif", "."),
+        ("./assets/default_slide_2.gif", "."),
     ],
     hiddenimports=["comtypes.stream"],
     hookspath=[],

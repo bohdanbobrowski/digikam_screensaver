@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "digikam_screensaver"
-version = "0.3"
+version = "1.0"
 description = "Simple digikam screensaver for Windows"
 readme = "README.md"
 requires-python = ">=3.0"

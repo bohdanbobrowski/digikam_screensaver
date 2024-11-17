@@ -51,7 +51,7 @@ Run configuration windows first:
 
 It should look like this:
 
-![digikam_screensaver_configuration_window.jpg](assets%2Fdigikam_screensaver_configuration_window.jpg)
+<img src="assets/digikam_screensaver_configuration_window.png" width="50%" />
 
 Then, to test how does it work just type:
 
