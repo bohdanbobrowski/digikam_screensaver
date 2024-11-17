@@ -182,6 +182,7 @@ class DigiKamScreenSaver:
         self.window = None
         self.configuration_form = None
         self.cache_file = os.path.join(os.getenv("LOCALAPPDATA"), "digikam_screensaver", "cache.json")  # type: ignore
+        self._extensions = ["JPG", "GIF", "PNG"]
 
     @staticmethod
     def open_image(path):
@@ -293,11 +294,13 @@ class DigiKamScreenSaver:
 
     def _get_query(self) -> str:
         sub_query = "SELECT imageid FROM ImageInformation ii "
-        sub_query += f'WHERE ii.rating > 0 AND ii.format in "JPG" ORDER BY RANDOM() LIMIT {self.settings.limit} '
+        sub_query += f'WHERE ii.rating > 0 AND ii.ii.format in ({', '.join(self._extensions)}) '
+        sub_query += f"ORDER BY RANDOM() LIMIT {self.settings.limit} "
         query = 'SELECT a.relativePath || "/" || i.name as file_path, i.uniqueHash, i.name as hash FROM Images i '
         query += "LEFT JOIN Albums a ON a.id == i.album "
         query += f"WHERE i.id IN ({sub_query}) "
         query += "ORDER BY RANDOM();"
+        print(query)
         return query
 
     def _get_pictures(self):
