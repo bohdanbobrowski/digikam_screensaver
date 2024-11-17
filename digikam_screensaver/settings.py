@@ -16,6 +16,7 @@ class DigiKamScreenSaverSettings(BaseSettings):
     font_size: int = 15
     limit: int = 10
     timeout: int = 5000
+    filter: int = 1
     width: int = 1920
     height: int = 1080
 

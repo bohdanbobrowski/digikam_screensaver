@@ -6,6 +6,13 @@ Windows screensaver, from pictures loaded out from DigiKam database in Python.
 
 As for now - this is just for Windows.
 
+## Instructions
+
+<p style="text-align: center">
+<img src="assets/default_slide_1.gif" width="80%" />
+<img src="assets/default_slide_2.gif" width="80%" />
+</p>
+
 ## Features
 
 - Takes random photos from digikam4.db SQLite database - but only `*.jpg` and rated (with at least one star).

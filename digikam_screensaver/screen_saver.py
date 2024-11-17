@@ -129,6 +129,8 @@ class DigiKamScreenSaverConfigurationForm:
 
         self.filter_value = IntVar(self.root, 1)
         filter_button_row = 6
+        self.filter_label = Label(self.root, text="Min. picture rating:")
+        self.filter_label.grid(row=filter_button_row, column=0, sticky=E, pady=5, padx=5)
         for text, value in values.items():
             filter_button = Radiobutton(
                 self.root,
@@ -136,7 +138,7 @@ class DigiKamScreenSaverConfigurationForm:
                 variable=self.filter_value,
                 value=value,
             )
-            filter_button.grid(row=filter_button_row, column=0, sticky=E, pady=0, padx=5)
+            filter_button.grid(row=filter_button_row, column=1, sticky=W, pady=0, padx=5)
             filter_button_row += 1
 
         self.ok_button = Button(self.root, text="OK", command=self._okay)
