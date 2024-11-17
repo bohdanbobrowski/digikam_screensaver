@@ -6,12 +6,20 @@ Windows screensaver, from pictures loaded out from DigiKam database in Python.
 
 As for now - this is just for Windows.
 
+## Instructions
+
+<p style="text-align: center">
+<img src="assets/default_slide_1.gif" width="80%" />
+<img src="assets/default_slide_2.gif" width="80%" />
+</p>
+
 ## Features
 
 - Takes random photos from digikam4.db SQLite database - but only `*.jpg` and rated (with at least one star).
 - Some configuration is needed.
 - Database is opened in read-only mode!
 - Pressing `<F-12>` will (obviously) turn off screen saver, but I've added a function that will open current picture in associated app.
+- Pressing `<F-1>` will open project Github page.  
 
 ## Known issues
 
@@ -43,7 +51,7 @@ Run configuration windows first:
 
 It should look like this:
 
-![digikam_screensaver_configuration_window.jpg](assets%2Fdigikam_screensaver_configuration_window.jpg)
+<img src="assets/digikam_screensaver_configuration_window.png" width="50%" />
 
 Then, to test how does it work just type:
 
@@ -59,7 +67,7 @@ If all required stuff is installed in system, this command should make the job:
 
     python digikam_digikam_screensaver_build.py
 
-You'll find exe in `.\dist` folder - just rename it and install.
+You'll find exe in `.\dist` folder - just rename it to scr and install.
 
 ## Documentation and inspiration
 
@@ -80,3 +88,8 @@ This might be interesting, according attaching window to given win32 handler:
 
 5. https://learn.microsoft.com/en-us/windows/win32/lwef/screen-saver-library
 6. https://learn.microsoft.com/en-us/previous-versions/troubleshoot/windows/win32/screen-saver-command-line
+
+### Other:
+
+8. Interesting discussion about screensaver settings window (which didn't changed since 20 years):
+https://www.reddit.com/r/Windows11/comments/q0b427/the_screensaver_settings_have_looked_like_this/
