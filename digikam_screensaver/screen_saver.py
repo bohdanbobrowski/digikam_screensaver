@@ -33,7 +33,7 @@ from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
 
 APP_NAME = "DigiKam Screensaver"
-VERSION = "v.0.3"
+VERSION = "0.3"
 
 logging.basicConfig(
     filename=os.path.join(str(os.getenv("LOCALAPPDATA")), "digikam_screensaver", "debug.log"),
@@ -43,7 +43,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logger = logging.getLogger(APP_NAME)
-logger.info(f"Running {APP_NAME}")
+logger.info(f"Running {APP_NAME} v.{VERSION}")
 
 
 def write_history(file_name: str):
@@ -305,7 +305,7 @@ class DigiKamScreenSaver:
         query += "LEFT JOIN Albums a ON a.id == i.album "
         query += f"WHERE i.id IN ({sub_query}) "
         query += "ORDER BY RANDOM();"
-        print(query)
+        logging.debug(f"QUERY: {query}")
         return query
 
     def _set_demo_slides(self):
@@ -402,6 +402,7 @@ class DigiKamScreenSaver:
         self.window.title(f"{APP_NAME} - Configuration")
         self.window.geometry("320x360")
         self.window.resizable(width=False, height=False)
+        self.window.attributes("-topmost", True)
         self.configuration_form = DigiKamScreenSaverConfigurationForm(self.window, self.settings, self.cache_file)
         self.window.mainloop()
 
@@ -420,6 +421,8 @@ def screen_saver():
     /s 1234
 
     ...where 1234 is parent window handler (win32gui stuff)
+
+    /d - additionally for debug purposes
     """
 
     run_mode = None
@@ -430,6 +433,11 @@ def screen_saver():
             run_mode = "preview"
         if sys.argv[len(sys.argv) - 1].lower().startswith("/s") or sys.argv[len(sys.argv) - 2].lower().startswith("/s"):
             run_mode = "screensaver"
+
+    # Add this argument to see all logs
+    if "/d" in sys.argv:
+        logger.setLevel(logging.DEBUG)
+        logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
     window_handler = None
     if len(sys.argv) > 1:
