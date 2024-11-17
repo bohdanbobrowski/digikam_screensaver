@@ -25,7 +25,6 @@ from tkinter import (
     Tk,
     W,
     font,
-    messagebox,
 )
 
 import psutil  # type: ignore
@@ -73,10 +72,11 @@ def asset_path(filename: str) -> str:
 
 
 class DigiKamScreenSaverConfigurationForm:
-    def __init__(self, root: Tk, settings: DigiKamScreenSaverSettings):
+    def __init__(self, root: Tk, settings: DigiKamScreenSaverSettings, cache_file: str):
         self.root = root
         self.settings = settings
         self.font_families = sorted(list(font.families()))
+        self.cache_file = cache_file
 
         validate_numeric = (self.root.register(self._validate_numeric), "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W")
 
@@ -89,34 +89,30 @@ class DigiKamScreenSaverConfigurationForm:
 
         self.database_file_label = Label(self.root, text="Digikam database file name:")
         self.database_file_label.grid(row=1, column=0, sticky=E, pady=5, padx=5)
-        self.database_file_variable = StringVar()
+        self.database_file_variable = StringVar(value=self.settings.database_file)
         self.database_file_entry = Entry(self.root, textvariable=self.database_file_variable)
-        self.database_file_variable.set(self.settings.database_file)
         self.database_file_entry.grid(row=1, column=1, sticky=W, pady=5, padx=5)
 
         self.font_name_label = Label(self.root, text="Caption font name:")
         self.font_name_label.grid(row=2, column=0, sticky=E, pady=5, padx=5)
-        self.font_name_variable = StringVar()
-        self.font_name_variable.set(self.settings.font_name)
+        self.font_name_variable = StringVar(value=self.settings.font_name)
         self.font_name_entry = OptionMenu(self.root, self.font_name_variable, *self.font_families)
         self.font_name_entry.grid(row=2, column=1, sticky=W, pady=5, padx=5)
 
         self.font_size_label = Label(self.root, text="Caption font size:")
         self.font_size_label.grid(row=3, column=0, sticky=E, pady=5, padx=5)
-        self.font_size_variable = IntVar()
+        self.font_size_variable = IntVar(value=self.settings.font_size)
         self.font_size_entry = Entry(
             root, textvariable=self.font_size_variable, validate="key", validatecommand=validate_numeric
         )
-        self.font_size_variable.set(self.settings.font_size)
         self.font_size_entry.grid(row=3, column=1, sticky=W, pady=5, padx=5)
 
         self.timeout_label = Label(self.root, text="Slideshow timeout:")
         self.timeout_label.grid(row=4, column=0, sticky=E, pady=5, padx=5)
-        self.timeout_variable = IntVar()
+        self.timeout_variable = IntVar(value=self.settings.timeout)
         self.timeout_entry = Entry(
             root, textvariable=self.timeout_variable, validate="key", validatecommand=validate_numeric
         )
-        self.timeout_variable.set(self.settings.timeout)
         self.timeout_entry.grid(row=4, column=1, sticky=W, pady=5, padx=5)
 
         values = {
@@ -128,14 +124,14 @@ class DigiKamScreenSaverConfigurationForm:
             "★★★★★": 5,
         }
 
-        self.filter_value = IntVar(self.root, 1)
+        self.filter_value = IntVar(self.root, self.settings.filter)
         filter_button_row = 6
         self.filter_label = Label(self.root, text="Min. picture rating:")
         self.filter_label.grid(row=filter_button_row, column=0, sticky=E, pady=5, padx=5)
-        for text, value in values.items():
+        for label, value in values.items():
             filter_button = Radiobutton(
                 self.root,
-                text=text,
+                text=label,
                 variable=self.filter_value,
                 value=value,
             )
@@ -162,8 +158,13 @@ class DigiKamScreenSaverConfigurationForm:
         self.settings.font_name = self.font_name_variable.get()
         self.settings.font_size = self.font_size_variable.get()
         self.settings.timeout = self.timeout_variable.get()
+        self.settings.filter = self.filter_value.get()
         settings_handler = DigiKamScreenSaverSettingsHandler()
         settings_handler.save(self.settings)
+        try:
+            os.remove(self.cache_file)
+        except FileNotFoundError:
+            pass
         self.root.destroy()
 
     def _cancel(self):
@@ -182,7 +183,8 @@ class DigiKamScreenSaver:
         self.window = None
         self.configuration_form = None
         self.cache_file = os.path.join(os.getenv("LOCALAPPDATA"), "digikam_screensaver", "cache.json")  # type: ignore
-        self._extensions = ["JPG", "GIF", "PNG"]
+        self._extensions: list[str] = ["JPG", "GIF", "PNG"]
+        self._demo_mode: bool = False
 
     @staticmethod
     def open_image(path):
@@ -261,26 +263,27 @@ class DigiKamScreenSaver:
                 self._tk_image = ImageTk.PhotoImage(image_pil)
                 self.canvas.delete("all")
                 self.canvas.create_image(tk_margins[0], tk_margins[1], anchor=NW, image=self._tk_image)
-                self.canvas.create_text(
-                    self.width / 2 + 1,
-                    self.height - 9,
-                    text=self.pictures[i],
-                    fill="black",
-                    font=(self.settings.font_name, self.settings.font_size),
-                    anchor=S,
-                )
-                self.canvas.create_text(
-                    self.width / 2,
-                    self.height - 10,
-                    text=self.pictures[i],
-                    fill="white",
-                    font=(self.settings.font_name, self.settings.font_size),
-                    anchor=S,
-                )
-                logger.info(f"Image loaded: {current_image}")
-                write_history(current_image)
-                memory_used = psutil.Process(os.getpid()).memory_info().rss / 1024**2
-                logger.info(f"Memory used: {memory_used}")
+                if not self._demo_mode:
+                    self.canvas.create_text(
+                        self.width / 2 + 1,
+                        self.height - 9,
+                        text=self.pictures[i],
+                        fill="black",
+                        font=(self.settings.font_name, self.settings.font_size),
+                        anchor=S,
+                    )
+                    self.canvas.create_text(
+                        self.width / 2,
+                        self.height - 10,
+                        text=self.pictures[i],
+                        fill="white",
+                        font=(self.settings.font_name, self.settings.font_size),
+                        anchor=S,
+                    )
+                    logger.info(f"Image loaded: {current_image}")
+                    write_history(current_image)
+                    memory_used = psutil.Process(os.getpid()).memory_info().rss / 1024**2
+                    logger.info(f"Memory used: {memory_used}")
                 self.canvas.pack()
             except OSError as e:
                 logger.error(f"Error loading file: {current_image}")
@@ -293,8 +296,10 @@ class DigiKamScreenSaver:
         self.window.after(self.settings.timeout, self._show_image, i + 1)
 
     def _get_query(self) -> str:
-        sub_query = "SELECT imageid FROM ImageInformation ii "
-        sub_query += f'WHERE ii.rating > 0 AND ii.ii.format in ({', '.join(self._extensions)}) '
+        sub_query = "SELECT imageid FROM ImageInformation ii WHERE "
+        if self.settings.filter > 0:
+            sub_query += f"ii.rating > {self.settings.filter - 1} AND "
+        sub_query += f'ii.format in ("{'", "'.join(self._extensions)}") '
         sub_query += f"ORDER BY RANDOM() LIMIT {self.settings.limit} "
         query = 'SELECT a.relativePath || "/" || i.name as file_path, i.uniqueHash, i.name as hash FROM Images i '
         query += "LEFT JOIN Albums a ON a.id == i.album "
@@ -303,18 +308,46 @@ class DigiKamScreenSaver:
         print(query)
         return query
 
+    def _set_demo_slides(self):
+        self._demo_mode = True
+        self.pictures = [
+            self._asset_path("default_slide_1.gif"),
+            self._asset_path("default_slide_2.gif"),
+        ]
+
     def _get_pictures(self):
-        con = sqlite3.connect(f"file:/{self.settings.database_path}?mode=ro", uri=True)
-        cursor = con.cursor()
-        self.pictures = []
-        result = cursor.execute(self._get_query())
-        for f in result.fetchall():
-            if f[0] is not None:
-                file_path = f[0].replace("/", "\\")[1:]
-                source_file = os.path.join(self.settings.pictures_path, file_path)
-                if os.path.isfile(source_file):
-                    self.pictures.append(file_path)
-        self._write_cache(json.dumps(self.pictures))
+        try:
+            self._demo_mode = False
+            con = sqlite3.connect(f"file:/{self.settings.database_path}?mode=ro", uri=True)
+            cursor = con.cursor()
+            self.pictures = []
+            db_query = self._get_query()
+            result = cursor.execute(db_query)
+            for f in result.fetchall():
+                if f[0] is not None:
+                    file_path = f[0].replace("/", "\\")[1:]
+                    source_file = os.path.join(self.settings.pictures_path, file_path)
+                    if os.path.isfile(source_file):
+                        self.pictures.append(file_path)
+            if self.pictures:
+                self._write_cache(json.dumps(self.pictures))
+            else:
+                logger.error("The database is configured correctly but no pictures found")
+                logger.error(db_query)
+                self._set_demo_slides()
+        except sqlite3.OperationalError as e:
+            logger.error(f"Database configuration error: {e}")
+            self._set_demo_slides()
+
+    @staticmethod
+    def _asset_path(filename: str) -> str:
+        try:
+            base_path = sys._MEIPASS  # type: ignore
+        except AttributeError:
+            base_path = os.path.abspath("./assets/")
+        if os.path.isfile(os.path.join(base_path, filename)):
+            return os.path.join(base_path, filename)
+        return os.path.join(os.path.abspath("../assets/"), filename)
 
     def _write_cache(self, content: str):
         with open(self.cache_file, "w") as f:
@@ -340,12 +373,6 @@ class DigiKamScreenSaver:
         self.window.bind("<Key>", self._exit_scr)
         self.window.bind("<Motion>", self._exit_scr)
         self.window.bind("<Button>", self._exit_scr)
-        if not os.path.isfile(self.settings.database_path):
-            messagebox.showinfo(
-                f"Digikam database {self.settings.database_path} not found.",
-                f"{APP_NAME} needs some configuration.",
-            )
-            exit()
         self._read_cache()
         self.width = self.window.winfo_screenwidth()
         self.height = self.window.winfo_screenheight()
@@ -375,7 +402,7 @@ class DigiKamScreenSaver:
         self.window.title(f"{APP_NAME} - Configuration")
         self.window.geometry("320x360")
         self.window.resizable(width=False, height=False)
-        self.configuration_form = DigiKamScreenSaverConfigurationForm(self.window, self.settings)
+        self.configuration_form = DigiKamScreenSaverConfigurationForm(self.window, self.settings, self.cache_file)
         self.window.mainloop()
 
 
