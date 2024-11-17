@@ -5,6 +5,7 @@ import shlex
 import sqlite3
 import subprocess
 import sys
+import webbrowser
 import winreg
 from datetime import datetime
 from random import shuffle
@@ -188,11 +189,20 @@ class DigiKamScreenSaver:
         subprocess.run([image_viewer, path])
 
     def _exit_scr(self, event: Event):
-        """Exit screensaver but when F12 pressed open last image in default program."""
-        if isinstance(event, Event) and event.keycode == 123:
-            self.open_image(self._current_image)
+        """Exit screensaver."""
+        if isinstance(event, Event):
+            if event.keycode == 112:
+                # On F1 open github page in default web browser:
+                self._open_github_page()
+            elif event.keycode == 123:
+                # On F12 open last image in default program:
+                self.open_image(self._current_image)
         if self.window is not None:
             self.window.destroy()
+
+    @staticmethod
+    def _open_github_page():
+        webbrowser.open("https://github.com/bohdanbobrowski/digikam_screensaver")
 
     @staticmethod
     def _rotate_image(image_pil: Image.Image) -> Image.Image:
@@ -283,7 +293,7 @@ class DigiKamScreenSaver:
 
     def _get_query(self) -> str:
         sub_query = "SELECT imageid FROM ImageInformation ii "
-        sub_query += f'WHERE ii.rating > 0 AND ii.format = "JPG" ORDER BY RANDOM() LIMIT {self.settings.limit} '
+        sub_query += f'WHERE ii.rating > 0 AND ii.format in "JPG" ORDER BY RANDOM() LIMIT {self.settings.limit} '
         query = 'SELECT a.relativePath || "/" || i.name as file_path, i.uniqueHash, i.name as hash FROM Images i '
         query += "LEFT JOIN Albums a ON a.id == i.album "
         query += f"WHERE i.id IN ({sub_query}) "

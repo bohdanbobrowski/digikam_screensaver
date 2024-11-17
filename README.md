@@ -19,6 +19,7 @@ As for now - this is just for Windows.
 - Some configuration is needed.
 - Database is opened in read-only mode!
 - Pressing `<F-12>` will (obviously) turn off screen saver, but I've added a function that will open current picture in associated app.
+- Pressing `<F-1>` will open project Github page.  
 
 ## Known issues
 
