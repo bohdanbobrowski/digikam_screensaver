@@ -18,6 +18,7 @@ from tkinter import (
     IntVar,
     Label,
     OptionMenu,
+    Radiobutton,
     S,
     StringVar,
     Tk,
@@ -32,6 +33,7 @@ from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
 
 APP_NAME = "DigiKam Screensaver"
+VERSION = "v.0.3"
 
 logging.basicConfig(
     filename=os.path.join(str(os.getenv("LOCALAPPDATA")), "digikam_screensaver", "debug.log"),
@@ -116,11 +118,32 @@ class DigiKamScreenSaverConfigurationForm:
         self.timeout_variable.set(self.settings.timeout)
         self.timeout_entry.grid(row=4, column=1, sticky=W, pady=5, padx=5)
 
+        values = {
+            "☆☆☆☆☆": 0,
+            "★☆☆☆☆": 1,
+            "★★☆☆☆": 2,
+            "★★★☆☆": 3,
+            "★★★★☆": 4,
+            "★★★★★": 5,
+        }
+
+        self.filter_value = IntVar(self.root, 1)
+        filter_button_row = 6
+        for text, value in values.items():
+            filter_button = Radiobutton(
+                self.root,
+                text=text,
+                variable=self.filter_value,
+                value=value,
+            )
+            filter_button.grid(row=filter_button_row, column=0, sticky=E, pady=0, padx=5)
+            filter_button_row += 1
+
         self.ok_button = Button(self.root, text="OK", command=self._okay)
-        self.ok_button.grid(row=5, column=0, sticky=E, pady=5, padx=5)
+        self.ok_button.grid(row=filter_button_row, column=0, sticky=E, pady=5, padx=5)
 
         self.cancel_button = Button(self.root, text="Cancel", command=self._cancel)
-        self.cancel_button.grid(row=5, column=1, sticky=W, pady=5, padx=5)
+        self.cancel_button.grid(row=filter_button_row, column=1, sticky=W, pady=5, padx=5)
 
     def _validate_numeric(
         self, action, index, value_if_allowed, prior_value, text, validation_type, trigger_type, widget_name
@@ -335,7 +358,8 @@ class DigiKamScreenSaver:
         self.window.iconbitmap(asset_path("digikam.ico"))
         self.window.title(APP_NAME)
         self.window.title(f"{APP_NAME} - Configuration")
-        self.window.geometry("400x300")
+        self.window.geometry("320x360")
+        self.window.resizable(width=False, height=False)
         self.configuration_form = DigiKamScreenSaverConfigurationForm(self.window, self.settings)
         self.window.mainloop()
 

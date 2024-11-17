@@ -59,7 +59,7 @@ If all required stuff is installed in system, this command should make the job:
 
     python digikam_digikam_screensaver_build.py
 
-You'll find exe in `.\dist` folder - just rename it and install.
+You'll find exe in `.\dist` folder - just rename it to scr and install.
 
 ## Documentation and inspiration
 
