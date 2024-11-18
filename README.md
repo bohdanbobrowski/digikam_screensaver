@@ -15,7 +15,7 @@ As for now - this is just for Windows.
 
 ## Features
 
-- Takes random photos from digikam4.db SQLite database - but only `*.jpg` and rated (with at least one star).
+- Takes random photos from digikam4.db SQLite database (`*.jpg`, `*.gif` and `*.png`) with a minimum rating according settings (by default it's one star).
 - Some configuration is needed.
 - Database is opened in read-only mode!
 - Pressing `<F-12>` will (obviously) turn off screen saver, but I've added a function that will open current picture in associated app.
