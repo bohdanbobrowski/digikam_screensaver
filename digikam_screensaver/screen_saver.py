@@ -50,13 +50,6 @@ logger = logging.getLogger(APP_NAME)
 logger.info(f"Running {APP_NAME} v.{VERSION}")
 
 
-def write_history(file_name: str):
-    f_path = os.path.join(CONFIG_PATH, "history.csv")  # type: ignore
-    with open(f_path, "a") as f:
-        date = datetime.now()
-        f.write(f'"{date.strftime("%Y-%m-%d %H:%M:%S")}","{file_name}"\n')
-
-
 def get_default_windows_app(suffix):
     """https://stackoverflow.com/a/48121945"""
     class_root = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, suffix)
@@ -189,6 +182,7 @@ class DigiKamScreenSaver:
         self.cache_file = os.path.join(CONFIG_PATH, "cache.json")  # type: ignore
         self._extensions: list[str] = ["JPG", "GIF", "PNG"]
         self._demo_mode: bool = False
+        self.history: dict | None = None
 
     @staticmethod
     def open_image(path):
@@ -285,7 +279,7 @@ class DigiKamScreenSaver:
                         anchor=S,
                     )
                     logger.info(f"Image loaded: {current_image}")
-                    write_history(current_image)
+                    self._write_history(current_image)
                     memory_used = psutil.Process(os.getpid()).memory_info().rss / 1024**2
                     logger.info(f"Memory used: {memory_used}")
                 self.canvas.pack()
@@ -298,6 +292,38 @@ class DigiKamScreenSaver:
         self.window.focus()
         self.window.focus_force()
         self.window.after(self.settings.timeout, self._show_image, i + 1)
+
+    def _read_history(self, f_path: str) -> dict:
+        history = {}
+        with open(f_path) as f:
+            file_content = f.read()
+        _history_lines = file_content.split("\n")
+        for l in _history_lines:
+            r = l.split(",")
+            _hk = "".join(r[:1]).strip('"')
+            _hv = ",".join(r[1:]).strip('"')
+            if _hk == "" or _hv == "":
+                continue
+            history[_hk] = _hv
+        return history
+
+    def _write_history(self, file_name: str):
+        f_path = os.path.join(CONFIG_PATH, "history.csv")  # type: ignore
+        if self.history is None:
+            self.history = self._read_history(f_path)
+        file_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.history[file_datetime] = file_name
+        if len(self.history.keys()) > self.settings.history_size:
+            _history_keys = list(self.history.keys())
+            _too_much = len(self.history.keys()) - self.settings.history_size
+            _keys_to_remove = _history_keys[:_too_much]
+            for k in _keys_to_remove:
+                self.history.pop(k, None)
+        history_content = ""
+        for ts, fn in self.history.items():
+            history_content += f'"{ts}","{fn}"\n'
+        with open(f_path, "w") as f:
+            f.write(history_content)
 
     def _get_query(self) -> str:
         sub_query = "SELECT imageid FROM ImageInformation ii WHERE "

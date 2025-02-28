@@ -19,6 +19,7 @@ class DigiKamScreenSaverSettings(BaseSettings):
     filter: int = 1
     width: int = 1920
     height: int = 1080
+    history_size: int = 1000
 
     @property
     def database_path(self) -> str:

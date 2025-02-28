@@ -23,6 +23,7 @@ dependencies = [
     "pillow",
     "pyyaml",
     "comtypes",
+    "psutil",
 ]
 
 [project.optional-dependencies]
