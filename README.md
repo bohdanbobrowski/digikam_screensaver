@@ -69,6 +69,10 @@ If all required stuff is installed in system, this command should make the job:
 
 You'll find exe in `.\dist` folder - just rename it to scr and install.
 
+## Known bugs
+
+On Windows 10, it is not possible to launch the associated graphical program (F12) - it looks like the screensaver is launched in some wrapper, which in turn blocks the launched graphical browser. But only with pyinstaller build! That's weird.
+
 ## Documentation and inspiration
 
 ### Python:
