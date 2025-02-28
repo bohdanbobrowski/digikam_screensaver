@@ -54,7 +54,7 @@ def write_history(file_name: str):
     f_path = os.path.join(CONFIG_PATH, "history.csv")  # type: ignore
     with open(f_path, "a") as f:
         date = datetime.now()
-        f.write(f"\"{date.strftime("%Y-%m-%d %H:%M:%S")}\",\"{file_name}\"\n")
+        f.write(f'"{date.strftime("%Y-%m-%d %H:%M:%S")}","{file_name}"\n')
 
 
 def get_default_windows_app(suffix):
