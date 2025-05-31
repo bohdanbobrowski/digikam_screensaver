@@ -33,7 +33,7 @@ from PIL import ExifTags, Image, ImageDraw, ImageFilter, ImageFont, ImageTk
 from digikam_screensaver.settings import DigiKamScreenSaverSettings, DigiKamScreenSaverSettingsHandler
 
 APP_NAME: str = "DigiKam Screensaver"
-VERSION: str = "0.3"
+VERSION: str = "1.1"
 CONFIG_PATH: str = os.path.join(str(os.getenv("LOCALAPPDATA")), "digikam_screensaver")
 
 if not os.path.exists(CONFIG_PATH):
@@ -73,7 +73,7 @@ class DigiKamScreenSaverConfigurationForm:
         self.root = root
         self.settings = settings
         self.font_families = sorted(list(font.families()))
-        self.cache_file = cache_file
+        self.file_paths.cache = cache_file
 
         validate_numeric = (self.root.register(self._validate_numeric), "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W")
 
@@ -159,7 +159,7 @@ class DigiKamScreenSaverConfigurationForm:
         settings_handler = DigiKamScreenSaverSettingsHandler()
         settings_handler.save(self.settings)
         try:
-            os.remove(self.cache_file)
+            os.remove(self.file_paths.cache)
         except FileNotFoundError:
             pass
         self.root.destroy()
@@ -168,8 +168,15 @@ class DigiKamScreenSaverConfigurationForm:
         self.root.destroy()
 
 
+class FilePaths:
+    avoid: str = os.path.join(CONFIG_PATH, "avoid.json")
+    cache: str = os.path.join(CONFIG_PATH, "cache.json")
+    history: str = os.path.join(CONFIG_PATH, "history.csv")
+
+
 class DigiKamScreenSaver:
     def __init__(self, target_window_handler: int | None = None):
+        self.file_paths: FilePaths = FilePaths()
         self.target_window_handler = target_window_handler
         self.settings_handler = DigiKamScreenSaverSettingsHandler()
         self.settings = self.settings_handler.read()
@@ -179,10 +186,10 @@ class DigiKamScreenSaver:
         self.canvas = None
         self.window = None
         self.configuration_form = None
-        self.cache_file = os.path.join(CONFIG_PATH, "cache.json")  # type: ignore
         self._extensions: list[str] = ["JPG", "GIF", "PNG"]
         self._demo_mode: bool = False
-        self.history: dict | None = None
+        self.history: dict = self._read_history()
+        self.avoid_images: set[str] = self._read_avoid_images()
 
     @staticmethod
     def open_image(path):
@@ -283,7 +290,9 @@ class DigiKamScreenSaver:
                     memory_used = psutil.Process(os.getpid()).memory_info().rss / 1024**2
                     logger.info(f"Memory used: {memory_used}")
                 self.canvas.pack()
-            except OSError as e:
+            except (OSError, Image.DecompressionBombError) as e:
+                self.avoid_images.add(current_image)
+                self._write_avoid_images()
                 logger.error(f"Error loading file: {current_image}")
                 logger.error(f"Exception: {e}")
         else:
@@ -293,24 +302,34 @@ class DigiKamScreenSaver:
         self.window.focus_force()
         self.window.after(self.settings.timeout, self._show_image, i + 1)
 
-    def _read_history(self, f_path: str) -> dict:
+    def _read_avoid_images(self) -> set[str]:
+        avoid_images = set()
+        if os.path.isfile(self.file_paths.avoid):
+            with open(self.file_paths.avoid) as f:
+                file_content = f.read()
+                avoid_images = set(file_content.split("\n"))
+        return avoid_images
+
+    def _write_avoid_images(self):
+        with open(self.file_paths.avoid, "w") as f:
+            f.write("\n".join(self.avoid_images))
+
+    def _read_history(self) -> dict:
         history = {}
-        with open(f_path) as f:
-            file_content = f.read()
-        _history_lines = file_content.split("\n")
-        for l in _history_lines:
-            r = l.split(",")
-            _hk = "".join(r[:1]).strip('"')
-            _hv = ",".join(r[1:]).strip('"')
-            if _hk == "" or _hv == "":
-                continue
-            history[_hk] = _hv
+        if os.path.isfile(self.file_paths.history):
+            with open(self.file_paths.history) as f:
+                file_content = f.read()
+            _history_lines = file_content.split("\n")
+            for _line in _history_lines:
+                r = _line.split(",")
+                _hk = "".join(r[:1]).strip('"')
+                _hv = ",".join(r[1:]).strip('"')
+                if _hk == "" or _hv == "":
+                    continue
+                history[_hk] = _hv
         return history
 
     def _write_history(self, file_name: str):
-        f_path = os.path.join(CONFIG_PATH, "history.csv")  # type: ignore
-        if self.history is None:
-            self.history = self._read_history(f_path)
         file_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.history[file_datetime] = file_name
         if len(self.history.keys()) > self.settings.history_size:
@@ -322,7 +341,7 @@ class DigiKamScreenSaver:
         history_content = ""
         for ts, fn in self.history.items():
             history_content += f'"{ts}","{fn}"\n'
-        with open(f_path, "w") as f:
+        with open(self.file_paths.history, "w") as f:
             f.write(history_content)
 
     def _get_query(self) -> str:
@@ -357,6 +376,11 @@ class DigiKamScreenSaver:
                 if f[0] is not None:
                     file_path = f[0].replace("/", "\\")[1:]
                     source_file = os.path.join(self.settings.pictures_path, file_path)
+                    if source_file in self.avoid_images:
+                        logger.warning(f"Avoiding image {source_file}")
+                        continue
+                    if source_file not in self.history.values():
+                        pass
                     if os.path.isfile(source_file):
                         self.pictures.append(file_path)
             if self.pictures:
@@ -380,12 +404,12 @@ class DigiKamScreenSaver:
         return os.path.join(os.path.abspath("../assets/"), filename)
 
     def _write_cache(self, content: str):
-        with open(self.cache_file, "w") as f:
+        with open(self.file_paths.cache, "w") as f:
             f.write(content)
 
     def _read_cache(self):
         try:
-            with open(self.cache_file) as f:
+            with open(self.file_paths.cache) as f:
                 self.pictures = json.load(f)
             shuffle(self.pictures)
         except FileNotFoundError:
@@ -433,7 +457,7 @@ class DigiKamScreenSaver:
         self.window.geometry("320x360")
         self.window.resizable(width=False, height=False)
         self.window.attributes("-topmost", True)
-        self.configuration_form = DigiKamScreenSaverConfigurationForm(self.window, self.settings, self.cache_file)
+        self.configuration_form = DigiKamScreenSaverConfigurationForm(self.window, self.settings, self.file_paths.cache)
         self.window.mainloop()
 
 
