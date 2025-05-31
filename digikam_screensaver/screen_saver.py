@@ -195,6 +195,7 @@ class DigiKamScreenSaver:
     def open_image(path):
         image_viewer = {"linux": "xdg-open", "win32": "explorer", "darwin": "open"}[sys.platform]
         subprocess.run([image_viewer, path])
+        # os.system(f"{image_viewer} {path}")
 
     def _exit_scr(self, event: Event):
         """Exit screensaver."""
