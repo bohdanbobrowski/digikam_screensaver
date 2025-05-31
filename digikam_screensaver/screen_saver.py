@@ -69,11 +69,11 @@ def asset_path(filename: str) -> str:
 
 
 class DigiKamScreenSaverConfigurationForm:
-    def __init__(self, root: Tk, settings: DigiKamScreenSaverSettings, cache_file: str):
+    def __init__(self, root: Tk, settings: DigiKamScreenSaverSettings):
         self.root = root
         self.settings = settings
         self.font_families = sorted(list(font.families()))
-        self.file_paths.cache = cache_file
+        self.file_paths: FilePaths = FilePaths()
 
         validate_numeric = (self.root.register(self._validate_numeric), "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W")
 
@@ -169,7 +169,7 @@ class DigiKamScreenSaverConfigurationForm:
 
 
 class FilePaths:
-    avoid: str = os.path.join(CONFIG_PATH, "avoid.json")
+    avoid: str = os.path.join(CONFIG_PATH, "avoid.csv")
     cache: str = os.path.join(CONFIG_PATH, "cache.json")
     history: str = os.path.join(CONFIG_PATH, "history.csv")
 
@@ -457,7 +457,7 @@ class DigiKamScreenSaver:
         self.window.geometry("320x360")
         self.window.resizable(width=False, height=False)
         self.window.attributes("-topmost", True)
-        self.configuration_form = DigiKamScreenSaverConfigurationForm(self.window, self.settings, self.file_paths.cache)
+        self.configuration_form = DigiKamScreenSaverConfigurationForm(self.window, self.settings)
         self.window.mainloop()
 
 
