@@ -3,7 +3,6 @@ import logging
 import os
 import shlex
 import sqlite3
-import subprocess
 import sys
 import webbrowser
 import winreg
@@ -191,27 +190,17 @@ class DigiKamScreenSaver:
         self.history: dict = self._read_history()
         self.avoid_images: set[str] = self._read_avoid_images()
 
-    @staticmethod
-    def open_image(path):
-        image_viewer = {"linux": "xdg-open", "win32": "explorer", "darwin": "open"}[sys.platform]
-        subprocess.run([image_viewer, path])
-        # os.system(f"{image_viewer} {path}")
-
     def _exit_scr(self, event: Event):
         """Exit screensaver."""
         if isinstance(event, Event):
             if event.keycode == 112:
                 # On F1 open github page in default web browser:
-                self._open_github_page()
+                webbrowser.open("https://github.com/bohdanbobrowski/digikam_screensaver")
             elif event.keycode == 123:
                 # On F12 open last image in default program:
-                self.open_image(self._current_image)
+                webbrowser.open(self._current_image)
         if self.window is not None:
             self.window.destroy()
-
-    @staticmethod
-    def _open_github_page():
-        webbrowser.open("https://github.com/bohdanbobrowski/digikam_screensaver")
 
     @staticmethod
     def _rotate_image(image_pil: Image.Image) -> Image.Image:
