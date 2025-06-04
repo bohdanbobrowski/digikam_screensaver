@@ -140,8 +140,9 @@ class DigiKamScreenSaverConfigurationForm:
         self.cancel_button = Button(self.root, text="Cancel", command=self._cancel)
         self.cancel_button.grid(row=filter_button_row, column=1, sticky=W, pady=5, padx=5)
 
+    @staticmethod
     def _validate_numeric(
-        self, action, index, value_if_allowed, prior_value, text, validation_type, trigger_type, widget_name
+        action, index, value_if_allowed, prior_value, text, validation_type, trigger_type, widget_name
     ):
         if str.isdigit(value_if_allowed):
             return True
@@ -175,11 +176,12 @@ class FilePaths:
 
 class DigiKamScreenSaver:
     def __init__(self, target_window_handler: int | None = None):
+        self._current_image: str | None = None
+        self._tk_image: str | None = None
         self.file_paths: FilePaths = FilePaths()
         self.target_window_handler = target_window_handler
         self.settings_handler = DigiKamScreenSaverSettingsHandler()
         self.settings = self.settings_handler.read()
-        self._current_image = self._tk_image = None
         self.pictures: list[str] = []
         self.width, self.height = (640, 480)
         self.canvas = None
@@ -194,11 +196,12 @@ class DigiKamScreenSaver:
         """Exit screensaver."""
         if isinstance(event, Event):
             if event.keycode == 112:
-                # On F1 open github page in default web browser:
+                # On F1 open GitHub page in default web browser:
                 webbrowser.open("https://github.com/bohdanbobrowski/digikam_screensaver")
             elif event.keycode == 123:
                 # On F12 open last image in default program:
-                webbrowser.open(self._current_image)
+                if self._current_image is not None:
+                    webbrowser.open(self._current_image)
         if self.window is not None:
             self.window.destroy()
 
